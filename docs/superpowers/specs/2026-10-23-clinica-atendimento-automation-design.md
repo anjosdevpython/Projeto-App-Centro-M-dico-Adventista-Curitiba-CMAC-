@@ -6,9 +6,9 @@
 
 ## 1. Objetivo
 
-Construir uma plataforma de atendimento administrativo automatizado para a Clínica Adventista. O piloto deve funcionar com dados sintéticos por meio do widget web do Chatwoot e simuladores das APIs externas. Quando a clínica fornecer as credenciais e os contratos reais, a ativação deverá exigir somente configuração, adequação localizada dos adaptadores e homologação, sem reescrever as jornadas.
+Construir uma plataforma de atendimento administrativo automatizado para a Clínica Adventista. Toda jornada administrativa normal deve ser concluída de ponta a ponta sem intervenção de atendente. O piloto deve funcionar com dados sintéticos por meio do widget web do Chatwoot e simuladores das APIs externas. Quando a clínica fornecer as credenciais e os contratos reais, a ativação deverá exigir somente configuração, adequação localizada dos adaptadores e homologação, sem reescrever as jornadas.
 
-O sistema cobrirá identificação, consulta de disponibilidade, agendamento, confirmação, cancelamento, reagendamento, instruções de preparo, lista de espera e transferência para atendimento humano.
+O sistema cobrirá orientação sobre tipos de consulta, especialidades, profissionais, unidades e procedimentos; identificação; consulta de disponibilidade; agendamento; confirmação; lembretes; cancelamento; reagendamento; instruções de preparo; lista de espera; pesquisas posteriores; e transferência para atendimento humano apenas como contingência.
 
 ## 2. Limites do produto
 
@@ -16,7 +16,10 @@ O sistema cobrirá identificação, consulta de disponibilidade, agendamento, co
 
 - Atendimento pelo widget web do Chatwoot no piloto.
 - Preparação para WhatsApp Cloud API oficial.
-- Jornadas administrativas automatizadas e auditáveis.
+- Jornadas administrativas completas, automatizadas e auditáveis.
+- Catálogo pesquisável de consultas, especialidades, profissionais, unidades, exames e preparos.
+- Orientação administrativa para ajudar o paciente a escolher o serviço adequado, sem diagnóstico ou indicação clínica.
+- Mensagens transacionais durante todo o ciclo: confirmação, lembretes, preparo, alteração, cancelamento e pós-atendimento.
 - Simulador da Soul MV com pacientes, agendas, profissionais, especialidades, procedimentos, convênios e marcações sintéticos.
 - Workflows do n8n exportados em JSON e importáveis.
 - Ambientes Docker de desenvolvimento e produção.
@@ -36,7 +39,7 @@ O sistema cobrirá identificação, consulta de disponibilidade, agendamento, co
 2. **Determinismo nas ações:** IA pode classificar intenção e extrair campos, mas não executa operações sem validação explícita.
 3. **Integrações substituíveis:** n8n nunca depende diretamente do formato proprietário da Soul MV.
 4. **Privacidade por padrão:** dados mínimos, retenção configurável e logs sanitizados.
-5. **Operação humana preservada:** qualquer paciente pode solicitar atendente; exceções seguem para uma fila humana com contexto.
+5. **Automação como caminho padrão:** nenhuma etapa administrativa normal exige atendente; qualquer paciente ainda pode solicitar ajuda, e exceções seguem para uma fila humana com contexto.
 6. **Paridade entre mock e produção:** simuladores e adaptadores reais obedecem aos mesmos contratos internos.
 
 ## 4. Arquitetura
@@ -64,16 +67,18 @@ Workflows previstos:
 
 1. Entrada de eventos do Chatwoot e deduplicação.
 2. Classificação de intenção e roteamento.
-3. Identificação/cadastro administrativo do paciente.
-4. Busca e reserva de disponibilidade.
-5. Confirmação de agendamento.
-6. Cancelamento e reagendamento.
-7. Lembretes D-2 e D-1.
-8. Orientações de preparo por procedimento.
-9. Lista de espera e preenchimento de vagas.
-10. Transferência para atendimento humano.
-11. Tratamento de falhas e reprocessamento.
-12. Rotinas agendadas, auditoria e KPIs.
+3. Dúvidas frequentes e orientação sobre consultas, especialidades, unidades e procedimentos.
+4. Identificação/cadastro administrativo do paciente.
+5. Busca e reserva de disponibilidade.
+6. Confirmação de agendamento.
+7. Cancelamento e reagendamento.
+8. Lembretes configuráveis em D-7, D-2, D-1 e no dia.
+9. Orientações de preparo por procedimento.
+10. Lista de espera e preenchimento de vagas.
+11. Mensagens pós-atendimento e pesquisa de satisfação.
+12. Transferência para atendimento humano.
+13. Tratamento de falhas e reprocessamento.
+14. Rotinas agendadas, auditoria e KPIs.
 
 Cada workflow terá JSON importável, documentação de variáveis, identificadores estáveis, timeout, tratamento explícito de erro e caminho de fallback.
 
@@ -111,27 +116,35 @@ O adaptador de WhatsApp segue a mesma estratégia: um mock para desenvolvimento 
 
 ## 5. Jornadas
 
-### 5.1 Entrada e identificação
+### 5.1 Orientação sobre serviços
+
+O paciente pode explicar em linguagem livre o que deseja ou navegar por menus. O sistema pesquisa um catálogo aprovado pela clínica e explica, em linguagem administrativa, tipos de consulta, especialidades, profissionais, unidades, horários, documentos, convênios aceitos e diferenças operacionais entre serviços. Pode filtrar opções conforme preferências informadas, mas não diagnostica, interpreta sintomas nem escolhe tratamento. Quando a dúvida exigir decisão clínica, o fluxo informa o limite e encaminha para o canal definido pela clínica.
+
+### 5.2 Entrada e identificação
 
 O Chatwoot envia o evento ao n8n. O evento é deduplicado, a intenção é classificada e o paciente recebe aviso de privacidade. Para operações que alteram agenda, o fluxo coleta e valida os identificadores administrativos mínimos. Falhas ou ambiguidade encaminham para humano.
 
-### 5.2 Agendamento
+### 5.3 Agendamento
 
 O paciente escolhe unidade, especialidade/procedimento e preferências. O Integration Core consulta opções e devolve uma lista normalizada. A opção selecionada recebe uma reserva temporária; a confirmação cria a marcação de forma idempotente. Concorrência ou expiração produzem novas opções, nunca duplicação.
 
-### 5.3 Cancelamento e reagendamento
+### 5.4 Cancelamento e reagendamento
 
 O sistema confirma a identidade e a marcação antes da mudança. Cancelamentos liberam a vaga e disparam o fluxo da lista de espera. Reagendamento só cancela a marcação anterior depois que a nova reserva estiver confirmada ou conforme a capacidade transacional oferecida pela API real.
 
-### 5.4 Lembretes e preparo
+### 5.5 Lembretes e preparo
 
-Rotinas agendadas selecionam marcações elegíveis em D-2 e D-1. Mensagens utilizam conteúdo versionado por procedimento e registram entrega, resposta e confirmação. Conteúdo clínico de preparo só poderá entrar em produção após validação e aprovação formal da clínica.
+Rotinas agendadas selecionam marcações elegíveis em janelas configuráveis, inicialmente D-7, D-2, D-1 e no dia do atendimento. Mensagens utilizam conteúdo versionado por consulta ou procedimento e registram entrega, resposta e confirmação. O paciente pode confirmar, cancelar ou reagendar diretamente pela mensagem, sem atendente. A cadência para automaticamente após cancelamento, reagendamento, confirmação definitiva ou pedido de não recebimento. Conteúdo clínico de preparo só poderá entrar em produção após validação e aprovação formal da clínica.
 
-### 5.5 Lista de espera
+### 5.6 Lista de espera
 
 Uma vaga liberada seleciona candidatos elegíveis por critérios configuráveis. A oferta tem prazo e lock; apenas a primeira aceitação válida conclui a marcação. Os demais candidatos recebem encerramento neutro.
 
-### 5.6 Transferência humana
+### 5.7 Pós-atendimento
+
+Após o horário previsto, o sistema pode enviar pesquisa de satisfação, instruções administrativas aprovadas e convite para agendar retorno quando essa informação estiver disponível de forma estruturada na Soul MV. Respostas negativas ou pedidos de contato criam uma tarefa no Chatwoot. O fluxo não envia resultado, receita, laudo ou dado clínico sem contrato, autenticação e validação específicos.
+
+### 5.8 Transferência humana
 
 O fluxo cria/atribui a conversa no Chatwoot e inclui resumo estruturado, intenção, dados já validados, etapa atual e erro, sem exigir que o paciente repita informações. O handoff ocorre por solicitação, baixa confiança, indisponibilidade externa, exceção de regra ou tema clínico.
 
@@ -165,7 +178,7 @@ Dados externos serão referenciados por identificadores opacos quando possível.
 
 ## 8. IA e segurança conversacional
 
-A primeira versão usa abordagem híbrida. Regras e menus cobrem caminhos críticos; um classificador pode reconhecer intenções e extrair campos de texto livre. A saída deve obedecer esquema estrito, possuir limiar de confiança e nunca autorizar diretamente uma operação.
+A primeira versão usa abordagem híbrida. Regras e menus cobrem caminhos críticos; um classificador pode reconhecer intenções, extrair campos de texto livre e pesquisar o catálogo administrativo aprovado. A saída deve obedecer esquema estrito, possuir limiar de confiança e nunca autorizar diretamente uma operação.
 
 Temas clínicos, sintomas, urgência, automutilação ou risco à vida não são processados como atendimento administrativo. A conversa recebe mensagem segura previamente aprovada e é encaminhada ao canal humano ou de emergência definido pela clínica.
 
@@ -187,6 +200,8 @@ O sistema deve operar sem provedor de IA: nesse modo, menus determinísticos per
 Métricas mínimas:
 
 - volume e conclusão por jornada;
+- resolução integral sem atendente;
+- dúvidas administrativas respondidas por categoria;
 - taxa de transferência humana;
 - erros por integração e endpoint;
 - latência por operação;
@@ -236,6 +251,9 @@ Quando as credenciais forem recebidas:
 
 - Todo o stack sobe por procedimento documentado e healthchecks ficam saudáveis.
 - O widget web inicia e conclui as jornadas administrativas principais.
+- Um paciente consegue descobrir o tipo administrativo de serviço, escolher uma opção e concluir o agendamento sem atendente.
+- Confirmações, lembretes, cancelamentos e reagendamentos funcionam de ponta a ponta e interrompem cadências incompatíveis.
+- A jornada normal alcança resolução integral automática; encaminhamentos humanos ficam restritos aos gatilhos de contingência definidos.
 - JSONs do n8n são importáveis e não contêm credenciais.
 - Soul MV Mock permite demonstrar sucesso, conflito e falha externa.
 - Repetição de eventos não cria mensagens ou marcações duplicadas.
