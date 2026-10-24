@@ -5,9 +5,18 @@ import { PortalShell } from '../components/portal-shell';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Portal de Atendimento Digital | Clínica Adventista de Curitiba',
-  description: 'Autoatendimento institucional e gestão de consultas da Clínica Adventista de Curitiba.',
+  title: 'Centro Médico Adventista | Portal de Atendimento Digital',
+  description: 'Autoatendimento institucional e gestão de consultas do Centro Médico Adventista de Curitiba.',
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/icon.png', sizes: '192x192', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: [
+      { url: '/icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
 };
 
 export const viewport: Viewport = {
