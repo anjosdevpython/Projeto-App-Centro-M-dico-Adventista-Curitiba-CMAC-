@@ -1,276 +1,273 @@
-# Automação de Atendimento da Clínica Adventista — Design
+# Portal de Autoatendimento do Centro Médico Adventista Curitiba — Design
 
-**Data:** 23 de outubro de 2026
-**Estado:** aprovado
-**Escopo:** piloto implantável, executável sem credenciais externas e preparado para integração posterior com Soul MV e WhatsApp Cloud API.
+**Data original:** 23 de outubro de 2026
 
-## 1. Objetivo
+**Revisão:** 24 de outubro de 2026
 
-Construir uma plataforma de atendimento administrativo automatizado para a Clínica Adventista. Toda jornada administrativa normal deve ser concluída de ponta a ponta sem intervenção de atendente. O piloto deve funcionar com dados sintéticos por meio do widget web do Chatwoot e simuladores das APIs externas. Quando a clínica fornecer as credenciais e os contratos reais, a ativação deverá exigir somente configuração, adequação localizada dos adaptadores e homologação, sem reescrever as jornadas.
+**Estado:** aguardando revisão final
 
-O sistema cobrirá orientação sobre tipos de consulta, especialidades, profissionais, unidades e procedimentos; identificação; consulta de disponibilidade; agendamento; confirmação; lembretes; cancelamento; reagendamento; instruções de preparo; lista de espera; pesquisas posteriores; e transferência para atendimento humano apenas como contingência.
+**Fonte de verdade:** solicitação mais recente do contratante
 
-## 2. Limites do produto
+**Instituição:** Centro Médico Adventista Curitiba (CMAC)
 
-### Incluído
+## 1. Decisão de produto
 
-- Atendimento pelo widget web do Chatwoot no piloto.
-- Preparação para WhatsApp Cloud API oficial.
-- Jornadas administrativas completas, automatizadas e auditáveis.
-- Catálogo pesquisável de consultas, especialidades, profissionais, unidades, exames e preparos.
-- Orientação administrativa para ajudar o paciente a escolher o serviço adequado, sem diagnóstico ou indicação clínica.
-- Mensagens transacionais durante todo o ciclo: confirmação, lembretes, preparo, alteração, cancelamento e pós-atendimento.
-- Simulador da Soul MV com pacientes, agendas, profissionais, especialidades, procedimentos, convênios e marcações sintéticos.
-- Workflows do n8n exportados em JSON e importáveis.
-- Ambientes Docker de desenvolvimento e produção.
-- Observabilidade, backup, documentação operacional e testes automatizados.
+O produto será um web app de autoatendimento administrativo, responsivo e acessível, no qual o paciente poderá navegar sem depender de chatbot. A primeira entrega funcional cobrirá cadastro, autenticação, recuperação de acesso, consulta de catálogo e horários, agendamento, consulta dos próprios agendamentos, cancelamento, reagendamento e emissão de protocolo.
 
-### Excluído
+O desenho anterior, centrado em Chatwoot e n8n, deixa de ser a arquitetura principal. Chatwoot poderá apoiar atendimento humano e n8n poderá orquestrar notificações, mas nenhum deles concentrará autenticação, autorização, regras críticas ou consistência transacional.
 
-- Diagnóstico, triagem clínica, interpretação de sintomas ou aconselhamento médico.
-- Integração produtiva com Soul MV antes da entrega das credenciais e especificações contratadas.
-- Uso de gateways não oficiais do WhatsApp.
-- Armazenamento de dados clínicos reais no ambiente de demonstração.
-- Biometria facial, faturamento TISS, prescrição digital e recepção física nesta primeira versão. Esses itens permanecem como extensões futuras.
+O portal automatiza etapas administrativas elegíveis. Não substitui profissionais de saúde, não elimina exceções operacionais e não executa funções clínicas.
 
-## 3. Princípios
+## 2. Evidências, requisitos e hipóteses
 
-1. **Segurança clínica:** automação restrita a tarefas administrativas.
-2. **Determinismo nas ações:** IA pode classificar intenção e extrair campos, mas não executa operações sem validação explícita.
-3. **Integrações substituíveis:** n8n nunca depende diretamente do formato proprietário da Soul MV.
-4. **Privacidade por padrão:** dados mínimos, retenção configurável e logs sanitizados.
-5. **Automação como caminho padrão:** nenhuma etapa administrativa normal exige atendente; qualquer paciente ainda pode solicitar ajuda, e exceções seguem para uma fila humana com contexto.
-6. **Paridade entre mock e produção:** simuladores e adaptadores reais obedecem aos mesmos contratos internos.
+### 2.1 Fatos confirmados em fontes públicas
 
-## 4. Arquitetura
+- A denominação oficial é **Centro Médico Adventista Curitiba**, sigla **CMAC**.
+- O endereço publicado é Alameda Júlia da Costa, 1447, Bigorrilho, Curitiba, PR, CEP 80730-070.
+- O CMAC integra a rede Adventist Health Brasil.
+- A missão publicada é servir, curar e salvar, promovendo saúde física, mental, social e espiritual, seguindo o exemplo de Cristo.
+- O manual possui regras para logotipos, cores, tipografia, tom de voz e aplicações; os ativos oficiais exigem autorização explícita.
+- A página comercial do SOUL MV informa capacidades gerais, como central de agendamento e integração, mas não documenta APIs.
+
+Fontes consultadas em 24 de outubro de 2026:
+
+- https://adventisthealth.com.br/unidades/
+- https://marca.adventisthealth.com.br/
+- https://marca.adventisthealth.com.br/brand-guidelines/
+- https://marca.adventisthealth.com.br/brand-guidelines/siglas-institucionais/
+- https://marca.adventisthealth.com.br/brand-guidelines/missao-visao-e-valores/
+- https://mv.com.br/solucao/soul-mv-hospitalar
+
+### 2.2 Requisitos informados pelo contratante
+
+- Web app convencional, mobile-first, em português brasileiro e WCAG 2.2 AA.
+- Backend, persistência, validação, testes e separação entre demonstração e integração real.
+- Primeira entrega com identidade, acesso, catálogo, disponibilidade e ciclo de agendamento.
+- SOUL MV como fonte de verdade para os dados sob sua responsabilidade.
+- Operações confirmadas apenas após resposta conclusiva do sistema responsável.
+- Segurança compatível com dados pessoais sensíveis e LGPD.
+- Estados de carregamento, vazio, sucesso, erro, indisponibilidade e recuperação.
+- Protocolo e comprovante para operações concluídas.
+- Métricas de conclusão, abandono, falha, duplicidade e encaminhamento.
+
+### 2.3 Hipóteses que exigem validação interna
+
+- Módulos SOUL MV contratados, documentação, autenticação, limites e homologação.
+- Regras de cancelamento, reagendamento, antecedência e tolerância.
+- Especialidades, profissionais, horários, convênios e documentos atuais.
+- Método institucional de verificação de identidade e recuperação.
+- Relações de responsabilidade e representação de dependentes.
+- Conteúdo aprovado para preparos, orientações, mensagens e comprovantes.
+- Provedores de comunicação, pagamentos e armazenamento de documentos.
+- Política jurídica de retenção, bases legais e atendimento a titulares.
+- Autorização para uso de logotipos, fontes e ativos oficiais.
+
+Dados públicos não serão promovidos a regras operacionais sem validação do CMAC.
+
+## 3. Escopo incremental
+
+### 3.1 Primeira entrega funcional
+
+- Cadastro com verificação de contato.
+- Autenticação, encerramento de sessão e recuperação de acesso.
+- Catálogo de especialidades, profissionais, unidades e horários.
+- Agendamento com reserva temporária, resumo e confirmação explícita.
+- Área “Meus agendamentos”.
+- Cancelamento e reagendamento conforme regras configuradas.
+- Protocolo e comprovante de cada operação confirmada.
+- Suporte para exceções, falha de identidade ou indisponibilidade.
+- Modo demonstrativo integralmente sintético e identificado.
+
+### 3.2 Evoluções condicionadas
+
+- Atualização cadastral e dependentes.
+- Convênio, plano e elegibilidade.
+- Pré-cadastro e envio privado de documentos.
+- Preparos aprovados, check-in e acompanhamento de chegada.
+- Pagamento por provedor autorizado.
+- Documentos e resultados já liberados pelos sistemas responsáveis.
+- Lembretes, pesquisa de satisfação e suporte.
+
+### 3.3 Fora do escopo inicial
+
+- Diagnóstico, prescrição, interpretação de exames ou triagem clínica.
+- Integração produtiva sem contrato e documentação autorizados.
+- Gravação direta no banco da MV ou automação de telas como padrão.
+- Dados reais em demonstração.
+- Confirmação local quando o resultado externo estiver incerto.
+
+## 4. Experiência e identidade visual
+
+A referência anexada orienta a hierarquia mobile, blocos arredondados, títulos diretos, atalhos em cartões e contraste alto. Ela não autoriza copiar a marca HELP nem inventar tokens da Adventist Health.
+
+Antes do acabamento, serão extraídos do manual os tokens permitidos: cores, tipografia, espaçamento, logos, margens de proteção, tamanhos mínimos e usos sobre fundos. Ativos ainda não autorizados terão substitutos provisórios claramente marcados.
+
+Princípios:
+
+- mobile-first e responsividade até desktop;
+- linguagem simples, alvos de toque amplos e ações inequívocas;
+- navegação por teclado, foco visível e semântica HTML;
+- mensagens de erro associadas e anúncios acessíveis;
+- contraste e escala compatíveis com WCAG 2.2 AA;
+- nenhuma jornada depende de cor, gesto ou chatbot;
+- dados sensíveis não entram em cache offline.
+
+## 5. Arquitetura
 
 ```text
-Widget web ─┐
-WhatsApp ───┼─> Chatwoot ─> n8n ─> Integration Core ─┬─> Soul MV Mock
-Humano ─────┘                                         ├─> Soul MV Adapter
-                                                      └─> WhatsApp Adapter
-                              │
-                              ├─> PostgreSQL
-                              ├─> Redis
-                              └─> métricas, logs e auditoria
+Navegador/PWA
+      |
+Web App Next.js
+      |
+API Fastify/TypeScript
+  |       |         |
+  |       |         +--> Auditoria, métricas e suporte
+  |       +------------> PostgreSQL + armazenamento privado
+  |
+  +--> SoulMvPort
+          |--> SoulMvDemoAdapter (dados sintéticos)
+          +--> SoulMvHttpAdapter (desativado até homologação)
+
+Opcionais:
+- n8n: notificações e orquestrações não transacionais
+- Chatwoot: atendimento humano e exceções
 ```
 
-### 4.1 Chatwoot
+### 5.1 Web app e backend
 
-Responsável por inbox, contatos, histórico conversacional, supervisão e transferência entre automação e atendentes. O piloto utiliza o widget web. A caixa de entrada oficial do WhatsApp será ativada quando a clínica fornecer Meta Business, número, token e identificadores.
+Next.js e TypeScript oferecerão formulários acessíveis e rotas protegidas. Fastify concentrará sessão, autorização por recurso, schemas, idempotência, regras, auditoria, protocolos e adaptação ao SOUL MV. O navegador nunca receberá segredos ou autorização implícita.
 
-### 4.2 n8n
+### 5.2 Persistência
 
-Responsável pela orquestração temporal e conversacional. Seus workflows chamam apenas a API interna do Integration Core. Regras de domínio, autenticação externa e normalização de dados não ficam embutidas nos nós.
+PostgreSQL guardará contas, sessões revogáveis, referências opacas externas, estados de jornada, idempotência, protocolos, suporte e auditoria minimizada. Migrações serão versionadas. Dados demonstrativos serão inequivocamente sintéticos.
 
-Workflows previstos:
+### 5.3 SOUL MV
 
-1. Entrada de eventos do Chatwoot e deduplicação.
-2. Classificação de intenção e roteamento.
-3. Dúvidas frequentes e orientação sobre consultas, especialidades, unidades e procedimentos.
-4. Identificação/cadastro administrativo do paciente.
-5. Busca e reserva de disponibilidade.
-6. Confirmação de agendamento.
-7. Cancelamento e reagendamento.
-8. Lembretes configuráveis em D-7, D-2, D-1 e no dia.
-9. Orientações de preparo por procedimento.
-10. Lista de espera e preenchimento de vagas.
-11. Mensagens pós-atendimento e pesquisa de satisfação.
-12. Transferência para atendimento humano.
-13. Tratamento de falhas e reprocessamento.
-14. Rotinas agendadas, auditoria e KPIs.
+`SoulMvPort` representará somente capacidades necessárias e confirmadas. O adaptador demonstrativo e o real obedecerão ao mesmo contrato. O real ficará desativado até documentação e acesso de homologação. Nenhum endpoint, payload, evento ou mecanismo de autenticação será inventado.
 
-Cada workflow terá JSON importável, documentação de variáveis, identificadores estáveis, timeout, tratamento explícito de erro e caminho de fallback.
+## 6. Identidade e acesso
 
-### 4.3 Integration Core
+O cadastro valida dados mínimos, duplicidade e abuso, confirma posse do contato e cria sessão segura. Recuperação exige fator proporcional ao risco; CPF isolado nunca autentica. Falhas incluem código expirado, excesso de tentativas, identidade divergente e indisponibilidade. A interface preserva o mínimo de contexto e oferece retomada ou suporte.
 
-Serviço TypeScript que oferece uma API REST interna, valida requisições e concentra:
+Critério central: uma identidade não acessa recursos pertencentes a outra, inclusive pela alteração manual de identificadores.
 
-- contratos versionados;
-- validação de entrada e saída;
-- regras administrativas;
-- idempotência;
-- controle de concorrência de reservas;
-- autenticação entre serviços;
-- rate limiting, retry com backoff e circuit breaker;
-- consentimento e retenção;
-- auditoria e logs sanitizados;
-- adaptadores para sistemas externos.
+## 7. Agendamento
 
-O serviço será modular, separando pacientes, catálogo, agendas, marcações, notificações, consentimentos e auditoria.
+Estados: `searching`, `available`, `held`, `confirming`, `confirmed`, `expired`, `conflicted`, `uncertain`, `failed`.
 
-### 4.4 Adaptadores e simuladores
+1. Paciente escolhe especialidade, profissional, unidade e data.
+2. Backend consulta o adaptador e devolve opções normalizadas.
+3. A escolha cria reserva temporária quando suportado.
+4. O resumo apresenta paciente, serviço, local, data, horário e regras.
+5. Confirmação explícita envia mutação idempotente.
+6. Somente resposta positiva gera status confirmado, protocolo e comprovante.
 
-O `SoulMvPort` define as operações necessárias sem pressupor os endpoints reais:
+Se outra pessoa ocupar o horário, não há confirmação local e novas opções são exibidas. Timeout após envio produz `uncertain`; o backend consulta o estado antes de repetir. Cliques repetidos, recarregamento e reenvio não duplicam marcações.
 
-- localizar/criar referência administrativa de paciente;
-- listar unidades, especialidades, profissionais e procedimentos;
-- consultar disponibilidade;
-- criar, confirmar, cancelar e reagendar marcação;
-- consultar preparo administrativo de procedimento;
-- verificar situação administrativa de convênio quando o contrato real permitir.
+## 8. Consulta, cancelamento e reagendamento
 
-`SoulMvMockAdapter` implementa essas operações com dados sintéticos. `SoulMvHttpAdapter` permanece protegido por feature flag e só será ativado após homologação. Testes de contrato devem ser executados contra ambos.
+“Meus agendamentos” lista somente recursos autorizados. Cancelamento valida identidade, propriedade e regra, exige confirmação explícita, usa idempotência, mostra sucesso somente após confirmação externa e emite protocolo.
 
-O adaptador de WhatsApp segue a mesma estratégia: um mock para desenvolvimento e uma implementação oficial da Cloud API ativada posteriormente.
+Reagendamento mantém o horário anterior enquanto a nova opção não estiver garantida, quando a integração permitir. A nova vaga usa reserva e controle de concorrência. Resultados incertos são reconciliados antes de qualquer repetição.
 
-## 5. Jornadas
+## 9. Exceções e suporte
 
-### 5.1 Orientação sobre serviços
+O usuário poderá abrir e acompanhar solicitação por falha de identidade, acessibilidade, indisponibilidade, divergência, integração incerta ou pedido humano. Cada solicitação terá protocolo, estado, histórico sanitizado e correlação técnica. Se Chatwoot for adotado, receberá somente dados mínimos e resumo sem segredos.
 
-O paciente pode explicar em linguagem livre o que deseja ou navegar por menus. O sistema pesquisa um catálogo aprovado pela clínica e explica, em linguagem administrativa, tipos de consulta, especialidades, profissionais, unidades, horários, documentos, convênios aceitos e diferenças operacionais entre serviços. Pode filtrar opções conforme preferências informadas, mas não diagnostica, interpreta sintomas nem escolhe tratamento. Quando a dúvida exigir decisão clínica, o fluxo informa o limite e encaminha para o canal definido pela clínica.
+## 10. Segurança e privacidade
 
-### 5.2 Entrada e identificação
+- Autorização no servidor em toda leitura e mutação.
+- Identificadores públicos não sequenciais.
+- Cookies HttpOnly, Secure, SameSite e proteção CSRF adequada.
+- Rate limiting e defesa contra enumeração.
+- Senhas com algoritmo atual e parâmetros versionados.
+- Segredos somente no servidor e fora do Git.
+- TLS e controles de acesso no armazenamento.
+- Logs sanitizados e auditoria sem dados sensíveis.
+- Uploads futuros privados, limitados e validados.
+- Retenção, exclusão, exportação e bases legais sujeitas a validação.
+- Backups com checksum e restauração ensaiada.
 
-O Chatwoot envia o evento ao n8n. O evento é deduplicado, a intenção é classificada e o paciente recebe aviso de privacidade. Para operações que alteram agenda, o fluxo coleta e valida os identificadores administrativos mínimos. Falhas ou ambiguidade encaminham para humano.
+Dependentes terão vínculos e permissões explícitos; não compartilharão automaticamente todos os dados do responsável.
 
-### 5.3 Agendamento
+## 11. Resiliência
 
-O paciente escolhe unidade, especialidade/procedimento e preferências. O Integration Core consulta opções e devolve uma lista normalizada. A opção selecionada recebe uma reserva temporária; a confirmação cria a marcação de forma idempotente. Concorrência ou expiração produzem novas opções, nunca duplicação.
+- Idempotência persistida para mutações.
+- Locks ou garantias transacionais para disputa de horário.
+- Timeouts explícitos e retry apenas quando seguro.
+- Circuit breaker para dependências degradadas.
+- Reconciliação de operações incertas.
+- Respostas externas validadas antes do domínio.
+- Correlação ponta a ponta e estados que nunca simulam conclusão.
 
-### 5.4 Cancelamento e reagendamento
+## 12. Testes
 
-O sistema confirma a identidade e a marcação antes da mudança. Cancelamentos liberam a vaga e disparam o fluxo da lista de espera. Reagendamento só cancela a marcação anterior depois que a nova reserva estiver confirmada ou conforme a capacidade transacional oferecida pela API real.
+- Unitários para regras, schemas, permissões e estados.
+- Repositórios e migrações com PostgreSQL.
+- Contrato compartilhado pelos adaptadores.
+- Integração para sessões, idempotência, concorrência e reconciliação.
+- E2E mobile e desktop para cadastro, acesso e agendamento.
+- Testes por teclado e auditorias automatizadas de acessibilidade.
+- Isolamento entre pacientes, cliques repetidos, disputa, timeout e falha externa.
+- Scanner de segredos, logs sanitizados, backup, restauração e rollback.
 
-### 5.5 Lembretes e preparo
+## 13. Métricas
 
-Rotinas agendadas selecionam marcações elegíveis em janelas configuráveis, inicialmente D-7, D-2, D-1 e no dia do atendimento. Mensagens utilizam conteúdo versionado por consulta ou procedimento e registram entrega, resposta e confirmação. O paciente pode confirmar, cancelar ou reagendar diretamente pela mensagem, sem atendente. A cadência para automaticamente após cancelamento, reagendamento, confirmação definitiva ou pedido de não recebimento. Conteúdo clínico de preparo só poderá entrar em produção após validação e aprovação formal da clínica.
+- início, conclusão, abandono e tempo por jornada;
+- buscas sem disponibilidade;
+- agendamentos, cancelamentos e reagendamentos confirmados;
+- duplicidades evitadas;
+- operações incertas e reconciliadas;
+- falhas e latência por integração;
+- suporte, intervenção humana e abuso bloqueado.
 
-### 5.6 Lista de espera
+Métricas não conterão identificadores pessoais ou conteúdo clínico.
 
-Uma vaga liberada seleciona candidatos elegíveis por critérios configuráveis. A oferta tem prazo e lock; apenas a primeira aceitação válida conclui a marcação. Os demais candidatos recebem encerramento neutro.
+## 14. Ambientes
 
-### 5.7 Pós-atendimento
+- `development`: dados sintéticos e ferramentas locais.
+- `demo`: faixa permanente “Ambiente de demonstração — nenhum atendimento real será realizado”.
+- `homologation`: integrações autorizadas e acesso restrito.
+- `production`: somente após aprovações técnica, institucional, jurídica e operacional.
 
-Após o horário previsto, o sistema pode enviar pesquisa de satisfação, instruções administrativas aprovadas e convite para agendar retorno quando essa informação estiver disponível de forma estruturada na Soul MV. Respostas negativas ou pedidos de contato criam uma tarefa no Chatwoot. O fluxo não envia resultado, receita, laudo ou dado clínico sem contrato, autenticação e validação específicos.
+O modo é determinado no servidor. Nenhum parâmetro do cliente transforma demonstração em operação real.
 
-### 5.8 Transferência humana
+## 15. Incrementos
 
-O fluxo cria/atribui a conversa no Chatwoot e inclui resumo estruturado, intenção, dados já validados, etapa atual e erro, sem exigir que o paciente repita informações. O handoff ocorre por solicitação, baixa confiança, indisponibilidade externa, exceção de regra ou tema clínico.
+1. Diagnóstico, fontes, jornadas, arquitetura e tokens autorizados.
+2. Portal demonstrativo com identidade, acesso e agendamento sintético.
+3. Integração real em homologação, limitada às capacidades documentadas.
+4. Cancelamento, reagendamento, reconciliação e recuperação homologados.
+5. Evoluções de cadastro, convênio, pré-atendimento, check-in, pagamentos e documentos.
+6. Hardening, acessibilidade, operação, produção e piloto controlado.
 
-## 6. Modelo de dados
+## 16. Critérios de aceite da primeira entrega
 
-O PostgreSQL armazenará somente dados necessários à automação:
+- Paciente A não acessa dados do paciente B.
+- Cadastro, acesso e recuperação não usam CPF como único fator.
+- Catálogo e horários sintéticos podem ser consultados.
+- Agendamento exige resumo e confirmação.
+- Cliques repetidos não duplicam agendamento.
+- Apenas uma pessoa vence disputa pelo mesmo horário.
+- Timeout não produz confirmação falsa.
+- Cancelamento e reagendamento obedecem às regras configuradas.
+- Toda conclusão produz protocolo verificável.
+- Jornadas funcionam em celular e por teclado.
+- Demonstração não pode ser confundida com atendimento real.
+- Stack executa sem segredos versionados.
+- Testes, migrações, contratos, implantação e rollback são documentados.
 
-- referências de contato e consentimento;
-- correlação entre conversa, paciente e marcação;
-- estado das jornadas;
-- chaves de idempotência e reservas;
-- fila de espera;
-- catálogo sintético/configurável de preparo;
-- eventos de auditoria;
-- entregas de notificações.
+## 17. Dependências para produção
 
-Dados externos serão referenciados por identificadores opacos quando possível. Redis suportará locks, cache curto, rate limiting e filas técnicas; não será fonte permanente de verdade.
+- Autorização de marca e ativos.
+- Validação do catálogo e regras pelo CMAC.
+- Processo de identidade e recuperação.
+- Parecer de privacidade, retenção e dependentes.
+- Contrato, documentação e credenciais de homologação do SOUL MV.
+- Provedores de comunicação, armazenamento e pagamentos.
+- Infraestrutura, domínio, TLS, monitoração, backup e responsáveis.
+- Homologação de segurança, acessibilidade e jornadas.
 
-## 7. Segurança e LGPD
+## 18. Relatório obrigatório
 
-- Segredos fornecidos apenas por variáveis/arquivos externos não versionados.
-- TLS no acesso externo e autenticação entre componentes.
-- Privilégio mínimo em bancos, Chatwoot, n8n e adaptadores.
-- Logs estruturados com mascaramento de CPF, telefone, tokens e conteúdo sensível.
-- Trilha de auditoria imutável no nível da aplicação para ações administrativas.
-- Política configurável de retenção e anonimização.
-- Exportação e exclusão atendidas por procedimento documentado.
-- Dados integralmente sintéticos no piloto.
-- Backups criptografados e restauração testada.
-- Documentação de resposta a incidentes e rotação de credenciais.
-
-## 8. IA e segurança conversacional
-
-A primeira versão usa abordagem híbrida. Regras e menus cobrem caminhos críticos; um classificador pode reconhecer intenções, extrair campos de texto livre e pesquisar o catálogo administrativo aprovado. A saída deve obedecer esquema estrito, possuir limiar de confiança e nunca autorizar diretamente uma operação.
-
-Temas clínicos, sintomas, urgência, automutilação ou risco à vida não são processados como atendimento administrativo. A conversa recebe mensagem segura previamente aprovada e é encaminhada ao canal humano ou de emergência definido pela clínica.
-
-O sistema deve operar sem provedor de IA: nesse modo, menus determinísticos permanecem funcionais.
-
-## 9. Resiliência e erros
-
-- Idempotência para eventos, mensagens e alterações de agenda.
-- Retentativas apenas em falhas transitórias, com backoff exponencial e jitter.
-- Circuit breaker para dependências externas.
-- Dead-letter/reprocessamento manual para falhas definitivas.
-- Locks com expiração para disputa por vaga.
-- Timeouts explícitos e limites de taxa configuráveis.
-- Fallback humano quando a continuidade automatizada não for segura.
-- Healthchecks de processo, dependências e prontidão.
-
-## 10. Observabilidade
-
-Métricas mínimas:
-
-- volume e conclusão por jornada;
-- resolução integral sem atendente;
-- dúvidas administrativas respondidas por categoria;
-- taxa de transferência humana;
-- erros por integração e endpoint;
-- latência por operação;
-- duplicações evitadas;
-- agendamentos, cancelamentos e reagendamentos;
-- confirmações e respostas a lembretes;
-- vagas preenchidas por lista de espera;
-- disponibilidade dos componentes.
-
-Logs terão correlação por jornada, conversa e requisição, sem expor dados sensíveis. Dashboards e alertas distinguirão falha técnica de exceção de negócio.
-
-## 11. Ambientes e implantação
-
-O repositório conterá Docker Compose para:
-
-- **desenvolvimento/piloto:** execução local, dados sintéticos e mocks ativos;
-- **produção:** imagens fixadas, proxy TLS, volumes persistentes, backups, healthchecks e adaptadores condicionados por flags.
-
-Serviços previstos: Chatwoot, n8n, Integration Core, Soul MV Mock, PostgreSQL, Redis, reverse proxy e stack de observabilidade. A topologia poderá ser instalada primeiro em notebook/servidor de demonstração e depois em Linux fornecido pela clínica.
-
-## 12. Estratégia de testes
-
-- Testes unitários das regras e validações.
-- Testes de contrato para portas e adaptadores.
-- Testes de integração com PostgreSQL e Redis.
-- Validação estrutural e execução automatizada dos workflows n8n.
-- Testes ponta a ponta das principais jornadas via Chatwoot e mocks.
-- Testes de concorrência para reserva e lista de espera.
-- Testes de falhas, retry, circuit breaker e reprocessamento.
-- Verificações de segurança, vazamento de segredo e sanitização de logs.
-- Ensaio documentado de backup e restauração.
-
-## 13. Ativação das APIs reais
-
-Quando as credenciais forem recebidas:
-
-1. Obter contratos OpenAPI/Swagger, ambientes e módulos licenciados.
-2. Mapear endpoints reais para `SoulMvPort` e registrar lacunas.
-3. Configurar autenticação e limites no cofre/ambiente de homologação.
-4. Implementar ajustes somente em `SoulMvHttpAdapter`.
-5. Executar testes de contrato e jornadas com dados autorizados.
-6. Validar conteúdo e regras com responsáveis da clínica.
-7. Realizar piloto controlado, observar métricas e aprovar produção.
-8. Repetir o processo para WhatsApp Cloud API.
-
-## 14. Critérios de aceite do piloto
-
-- Todo o stack sobe por procedimento documentado e healthchecks ficam saudáveis.
-- O widget web inicia e conclui as jornadas administrativas principais.
-- Um paciente consegue descobrir o tipo administrativo de serviço, escolher uma opção e concluir o agendamento sem atendente.
-- Confirmações, lembretes, cancelamentos e reagendamentos funcionam de ponta a ponta e interrompem cadências incompatíveis.
-- A jornada normal alcança resolução integral automática; encaminhamentos humanos ficam restritos aos gatilhos de contingência definidos.
-- JSONs do n8n são importáveis e não contêm credenciais.
-- Soul MV Mock permite demonstrar sucesso, conflito e falha externa.
-- Repetição de eventos não cria mensagens ou marcações duplicadas.
-- Transferência humana preserva o contexto no Chatwoot.
-- Logs e auditoria permitem reconstruir uma jornada sem revelar dados protegidos.
-- Testes automatizados passam em ambiente limpo.
-- Documentação descreve instalação, operação, backup, incidentes e ativação das APIs reais.
-
-## 15. Entregáveis
-
-- código-fonte do Integration Core e simuladores;
-- configurações Docker;
-- workflows n8n em JSON;
-- configuração documentada do Chatwoot;
-- esquemas e migrações do banco;
-- contratos internos e exemplos de payload;
-- suíte de testes;
-- dashboards e alertas básicos;
-- runbooks de instalação, operação, backup, incidentes e homologação;
-- checklist final para implantação na clínica.
+Cada incremento registrará o que foi implementado e testado, o que é apenas demonstrativo, quais integrações foram realmente homologadas, dependências de produção, jornadas que exigem intervenção humana, métricas e riscos residuais.
