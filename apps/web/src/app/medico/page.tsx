@@ -12,6 +12,7 @@ export default function MedicoPage() {
   const [activeTab, setActiveTab] = useState<'agenda' | 'fila' | 'prontuario' | 'interconsultas'>('agenda');
   const [activeCallMessage, setActiveCallMessage] = useState<string | null>(null);
   const [prescriptionSent, setPrescriptionSent] = useState<boolean>(false);
+  const [consultationFinished, setConsultationFinished] = useState<boolean>(false);
 
   useEffect(() => {
     setSession(getOrCreateDemoSession());
@@ -26,6 +27,14 @@ export default function MedicoPage() {
   function handleSendPrescription() {
     setPrescriptionSent(true);
     setTimeout(() => setPrescriptionSent(false), 5000);
+  }
+
+  function handleFinishConsultation() {
+    setConsultationFinished(true);
+    setTimeout(() => {
+      setConsultationFinished(false);
+      setActiveTab('agenda');
+    }, 2500);
   }
 
   return (
@@ -155,6 +164,16 @@ export default function MedicoPage() {
           >
             <span className="material-symbols-outlined text-[24px]">verified</span>
             <span>Prescrição Digital assinada com certificado ICP-Brasil e enviada via SMS/WhatsApp à paciente!</span>
+          </div>
+        )}
+
+        {consultationFinished && (
+          <div
+            role="status"
+            className="p-4 rounded-2xl bg-tertiary-fixed text-on-tertiary-fixed-variant text-sm font-bold flex items-center gap-3 shadow-md animate-pulse border border-tertiary-container/30"
+          >
+            <span className="material-symbols-outlined text-[24px]">task_alt</span>
+            <span>Consulta finalizada com sucesso! Prontuário eletrônico salvo e liberado no SOUL MV.</span>
           </div>
         )}
 
@@ -491,10 +510,7 @@ export default function MedicoPage() {
 
                 <button
                   type="button"
-                  onClick={() => {
-                    alert('Consulta concluída e sincronizada com o prontuário eletrônico do paciente.');
-                    setActiveTab('agenda');
-                  }}
+                  onClick={handleFinishConsultation}
                   className="w-full h-11 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[18px]">check_circle</span>

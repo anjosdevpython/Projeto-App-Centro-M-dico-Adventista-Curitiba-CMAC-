@@ -14,6 +14,15 @@ interface PatientDocument {
   size: string;
 }
 
+interface Dependente {
+  id: string;
+  nome: string;
+  parentesco: string;
+  idade: string;
+  cpf: string;
+  especialidade: string;
+}
+
 export default function PerfilPage() {
   const [session, setSession] = useState<DemoCredentials | null>(null);
 
@@ -46,6 +55,31 @@ export default function PerfilPage() {
   ]);
   const [uploadSuccessMsg, setUploadSuccessMsg] = useState<string | null>(null);
 
+  // Estados do Formulário de Dependentes
+  const [dependentes, setDependentes] = useState<Dependente[]>([
+    {
+      id: 'dep-1',
+      nome: 'Maria Eduarda Silva',
+      parentesco: 'Filha',
+      idade: '11 anos',
+      cpf: '089.***.***-12',
+      especialidade: 'Pediatria Humanizada',
+    },
+    {
+      id: 'dep-2',
+      nome: 'João Pedro Silva',
+      parentesco: 'Filho',
+      idade: '6 anos',
+      cpf: '094.***.***-45',
+      especialidade: 'Pediatria Humanizada',
+    },
+  ]);
+  const [isAddingDependente, setIsAddingDependente] = useState<boolean>(false);
+  const [depNome, setDepNome] = useState<string>('');
+  const [depParentesco, setDepParentesco] = useState<string>('Filho(a)');
+  const [depDataNasc, setDepDataNasc] = useState<string>('');
+  const [depCpf, setDepCpf] = useState<string>('');
+
   useEffect(() => {
     const s = getOrCreateDemoSession();
     setSession(s);
@@ -74,6 +108,37 @@ export default function PerfilPage() {
       setDocuments([newDoc, ...documents]);
       setUploadSuccessMsg(`Documento "${file.name}" enviado com sucesso para a recepção digital!`);
       setTimeout(() => setUploadSuccessMsg(null), 4500);
+    }
+  }
+
+  function handleAddDependente(e: React.FormEvent) {
+    e.preventDefault();
+    if (!depNome.trim()) return;
+
+    const novoDep: Dependente = {
+      id: `dep-${Date.now()}`,
+      nome: depNome,
+      parentesco: depParentesco,
+      idade: depDataNasc ? `Nasc. ${depDataNasc}` : 'Menor de idade',
+      cpf: depCpf || 'Pendente de certidão',
+      especialidade: 'Clínica Geral / Pediatria',
+    };
+
+    setDependentes([...dependentes, novoDep]);
+    setIsAddingDependente(false);
+    setDepNome('');
+    setDepParentesco('Filho(a)');
+    setDepDataNasc('');
+    setDepCpf('');
+    setSaveSuccessMsg(`Dependente ${novoDep.nome} cadastrado e vinculado ao prontuário familiar!`);
+    setTimeout(() => setSaveSuccessMsg(null), 4000);
+  }
+
+  function handleRemoveDependente(id: string) {
+    if (confirm('Deseja realmente remover este dependente do seu cadastro familiar?')) {
+      setDependentes(dependentes.filter((d) => d.id !== id));
+      setSaveSuccessMsg('Dependente removido com sucesso.');
+      setTimeout(() => setSaveSuccessMsg(null), 3000);
     }
   }
 
@@ -115,7 +180,7 @@ export default function PerfilPage() {
                 </span>
               </div>
               <h1 className="text-base font-bold text-on-primary leading-tight truncate">
-                Perfil de Saúde, Cadastro &amp; Documentos
+                Perfil de Saúde, Cadastro &amp; Dependentes
               </h1>
             </div>
           </div>
@@ -287,7 +352,7 @@ export default function PerfilPage() {
                     <button
                       type="button"
                       onClick={() => setIsEditingData(false)}
-                      className="px-4 py-2 rounded-xl bg-surface-container text-on-surface font-medium hover:bg-surface-container-high transition-colors"
+                      className="px-4 py-2 rounded-xl bg-surface-container text-on-surface font-medium hover:bg-surface-container-high transition-colors cursor-pointer"
                     >
                       Cancelar
                     </button>
@@ -412,50 +477,143 @@ export default function PerfilPage() {
 
           {/* Coluna Secundária: 5 cols (Dependentes, Alertas & 8 Remédios Naturais) */}
           <div className="lg:col-span-5 flex flex-col gap-6">
-            {/* Prontuário Familiar & Dependentes do Stitch */}
-            <section className="card-interactive p-5 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col gap-3 border border-slate-200/80">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-primary">Prontuário Familiar &amp; Dependentes</h3>
+            {/* Prontuário Familiar & Dependentes com FORMULÁRIO COMPLETO */}
+            <section className="card-interactive p-5 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col gap-4 border border-slate-200/80">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[20px] text-secondary">family_restroom</span>
+                  <h3 className="text-base font-bold text-primary">Prontuário Familiar &amp; Dependentes</h3>
+                </div>
                 <button
                   type="button"
-                  onClick={() => alert('Fluxo demonstrativo: inclusão de dependente via validação de certidão/CPF.')}
-                  className="text-xs text-secondary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                  onClick={() => setIsAddingDependente(!isAddingDependente)}
+                  className="text-xs text-secondary font-semibold hover:underline flex items-center gap-1 cursor-pointer bg-secondary-fixed/20 px-2.5 py-1 rounded-lg"
                 >
-                  <span className="material-symbols-outlined text-[16px]">person_add</span>
-                  <span>Adicionar</span>
+                  <span className="material-symbols-outlined text-[16px]">
+                    {isAddingDependente ? 'close' : 'person_add'}
+                  </span>
+                  <span>{isAddingDependente ? 'Cancelar' : 'Adicionar'}</span>
                 </button>
               </div>
 
-              <div className="flex flex-col gap-2.5">
-                <div className="p-3 rounded-xl bg-surface-container-low flex items-center justify-between text-xs border border-surface-container">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold">
-                      MS
-                    </div>
-                    <div>
-                      <strong className="text-on-surface block font-semibold">Maria Eduarda Silva</strong>
-                      <span className="text-outline">Filha • 11 anos • Pediatria</span>
-                    </div>
+              {/* FORMULÁRIO DE INCLUSÃO DE DEPENDENTE */}
+              {isAddingDependente && (
+                <form
+                  onSubmit={handleAddDependente}
+                  className="p-4 rounded-xl bg-surface-container-low border border-secondary/30 flex flex-col gap-3 text-xs animate-fade-in-up"
+                >
+                  <div className="flex items-center gap-2 text-primary font-bold">
+                    <span className="material-symbols-outlined text-[18px] text-secondary">group_add</span>
+                    <span>Novo Dependente</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold">
-                    Dependente
-                  </span>
-                </div>
 
-                <div className="p-3 rounded-xl bg-surface-container-low flex items-center justify-between text-xs border border-surface-container">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold">
-                      JS
-                    </div>
+                  <div>
+                    <label className="text-outline font-medium block mb-1">Nome Completo do Dependente *</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Beatriz Silva"
+                      value={depNome}
+                      onChange={(e) => setDepNome(e.target.value)}
+                      required
+                      className="w-full h-10 px-3 rounded-lg bg-surface-container-lowest border border-slate-200 text-on-surface font-medium focus:ring-2 focus:ring-secondary focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <strong className="text-on-surface block font-semibold">João Pedro Silva</strong>
-                      <span className="text-outline">Filho • 6 anos • Pediatria</span>
+                      <label className="text-outline font-medium block mb-1">Parentesco</label>
+                      <select
+                        value={depParentesco}
+                        onChange={(e) => setDepParentesco(e.target.value)}
+                        className="w-full h-10 px-2.5 rounded-lg bg-surface-container-lowest border border-slate-200 text-on-surface font-medium focus:ring-2 focus:ring-secondary focus:outline-none"
+                      >
+                        <option value="Filho(a)">Filho(a)</option>
+                        <option value="Cônjuge">Cônjuge</option>
+                        <option value="Pai/Mãe">Pai/Mãe</option>
+                        <option value="Enteado(a)">Enteado(a)</option>
+                        <option value="Tutela Legal">Tutela Legal</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-outline font-medium block mb-1">Data de Nascimento</label>
+                      <input
+                        type="date"
+                        value={depDataNasc}
+                        onChange={(e) => setDepDataNasc(e.target.value)}
+                        className="w-full h-10 px-2.5 rounded-lg bg-surface-container-lowest border border-slate-200 text-on-surface font-medium focus:ring-2 focus:ring-secondary focus:outline-none"
+                      />
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold">
-                    Dependente
-                  </span>
-                </div>
+
+                  <div>
+                    <label className="text-outline font-medium block mb-1">CPF ou Número da Certidão</label>
+                    <input
+                      type="text"
+                      placeholder="000.000.000-00"
+                      value={depCpf}
+                      onChange={(e) => setDepCpf(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg bg-surface-container-lowest border border-slate-200 text-on-surface font-medium focus:ring-2 focus:ring-secondary focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingDependente(false)}
+                      className="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-medium hover:bg-surface-container-high transition-colors cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn-glow px-4 py-1.5 rounded-lg bg-primary text-on-primary font-bold shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">check</span>
+                      <span>Salvar Dependente</span>
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* LISTA DE DEPENDENTES ATIVOS */}
+              <div className="flex flex-col gap-2.5">
+                {dependentes.map((dep) => (
+                  <div
+                    key={dep.id}
+                    className="p-3 rounded-xl bg-surface-container-low flex items-center justify-between text-xs border border-surface-container hover:border-secondary/30 transition-all"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                        {dep.nome
+                          .split(' ')
+                          .map((n) => n[0])
+                          .slice(0, 2)
+                          .join('')}
+                      </div>
+                      <div className="min-w-0">
+                        <strong className="text-on-surface block font-semibold truncate">{dep.nome}</strong>
+                        <span className="text-outline text-[11px] block truncate">
+                          {dep.parentesco} • {dep.idade} • {dep.especialidade}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
+                        Vinculado
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveDependente(dep.id)}
+                        title="Remover dependente"
+                        className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-outline hover:text-red-700 transition-colors cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </section>
 
