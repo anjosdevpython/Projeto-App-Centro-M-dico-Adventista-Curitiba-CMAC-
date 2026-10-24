@@ -459,6 +459,76 @@ export default function InicioPage() {
                 </div>
               </a>
             </section>
+
+            {/* Unidades & Estrutura Oficial Bigorrilho (Site Oficial CMAC) */}
+            <section className="w-full flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg text-primary font-bold tracking-tight">Nossas Unidades</h2>
+                <span className="text-xs text-on-surface-variant font-medium">Curitiba • Bigorrilho</span>
+              </div>
+
+              {/* Unidade 1: Centro Médico Júlia da Costa */}
+              <div className="rounded-2xl overflow-hidden bg-surface-container-lowest border border-slate-200/80 shadow-sm flex flex-col">
+                <div className="relative h-36 w-full overflow-hidden bg-primary/10">
+                  <img
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDffecwJI9J1164hdbbz0nbMWf5E10Qtfg09Tuk_Db4Al-j_QxAiDnN9HOLewVOxUHgTeRUIgdeOYY7byjXRrVmAfDrUqD1Pn6nbxjgF2fjDIvktXiVVdhIhRTKFgnqnspFg3kAc7ueUwo2h0sesyOce8ORtZomfin7TpXqVfSNudunFhsUChiTppv8_BXxf9LHkztREpDoKffE3tSLN_P-VxwWF-cqcYVBF_V13Q"
+                    alt="Centro Médico Adventista Curitiba - Bigorrilho"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent flex items-end p-3.5">
+                    <div className="flex items-center justify-between w-full text-white">
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider bg-secondary px-2 py-0.5 rounded-full">
+                          Unidade 1 • Centro Médico
+                        </span>
+                        <h4 className="font-bold text-sm text-white mt-1">Alameda Júlia da Costa, 1447</h4>
+                      </div>
+                      <span className="text-xs text-white/90 font-medium bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-xl">
+                        Bigorrilho
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 flex flex-col gap-2.5 text-xs">
+                  <div className="flex items-center justify-between text-on-surface-variant">
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <span className="material-symbols-outlined text-[16px] text-secondary">schedule</span>
+                      Segunda a Quinta: 07h15 às 19h • Sexta: 07h15 às 16h
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <span className="flex items-center gap-1 font-semibold text-primary">
+                      <span className="material-symbols-outlined text-[16px] text-secondary">call</span>
+                      (41) 3240-2900
+                    </span>
+                    <a
+                      href="/agendar"
+                      className="px-3 py-1.5 rounded-xl bg-primary text-white font-bold text-xs hover:bg-primary-container transition-colors"
+                    >
+                      Agendar Aqui
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Unidade 2: Ângelo Sampaio */}
+              <div className="p-4 rounded-2xl bg-surface-container-low border border-slate-200/80 flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[20px]">domain</span>
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold text-secondary">Unidade 2</span>
+                    <h5 className="font-bold text-primary text-sm truncate">Alferes Ângelo Sampaio, 2585</h5>
+                    <p className="text-on-surface-variant text-[11px] truncate">
+                      Consultórios Especializados &amp; Atendimento Integrativo
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[11px] text-secondary font-bold shrink-0">Bigorrilho</span>
+              </div>
+            </section>
           </div>
         </div>
       </main>
