@@ -6,7 +6,7 @@
     "node": ">=22 <25"
   },
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run && pnpm --filter @cmac/api test && pnpm --filter @cmac/web test",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "build": "pnpm -r --if-present build"
