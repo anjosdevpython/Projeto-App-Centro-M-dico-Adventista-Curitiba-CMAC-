@@ -15,6 +15,8 @@ export default function AgendarPage() {
   const [paymentOption, setPaymentOption] = useState<'unimed' | 'particular'>('unimed');
   const [bookedAppointment, setBookedAppointment] = useState<DemoAppointment | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [doctorModalOpen, setDoctorModalOpen] = useState<boolean>(false);
+  const [selectedShift, setSelectedShift] = useState<'todos' | 'manha' | 'tarde'>('todos');
 
   function handleConfirmBooking() {
     setIsSubmitting(true);
@@ -296,51 +298,116 @@ export default function AgendarPage() {
               </select>
             </section>
 
-            {/* Profissional e Horários */}
+            {/* Profissional e Horários com Bio Modal e Filtro por Turno */}
             <section className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <h2 className="text-sm text-primary font-bold">Profissional &amp; Próximos Horários</h2>
-                <span className="text-xs text-on-surface-variant">Vagas em tempo real</span>
+                <div className="flex items-center gap-1 bg-surface-container p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedShift('todos')}
+                    className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
+                      selectedShift === 'todos' ? 'bg-white text-primary shadow-xs' : 'text-on-surface-variant'
+                    }`}
+                  >
+                    Todos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedShift('manha')}
+                    className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
+                      selectedShift === 'manha' ? 'bg-white text-primary shadow-xs' : 'text-on-surface-variant'
+                    }`}
+                  >
+                    Manhã (4 vagas)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedShift('tarde')}
+                    className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
+                      selectedShift === 'tarde' ? 'bg-white text-primary shadow-xs' : 'text-on-surface-variant'
+                    }`}
+                  >
+                    Tarde (2 vagas)
+                  </button>
+                </div>
               </div>
 
               {/* Card Dra. Juliana */}
               <div className="p-4 md:p-5 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col gap-3 border border-slate-200/80">
-                <div className="flex items-start gap-3.5">
-                  <div className="w-12 h-12 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-bold text-sm shrink-0">
-                    JP
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-bold text-primary truncate">
-                        Dra. Juliana Prado Mendes
-                      </h3>
-                      <span className="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-bold">
-                        Unimed &amp; Particular
-                      </span>
+                <div className="flex items-start justify-between gap-3.5 flex-wrap">
+                  <div className="flex items-start gap-3.5">
+                    <div className="w-12 h-12 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-bold text-sm shrink-0">
+                      JP
                     </div>
-                    <span className="text-xs text-on-surface-variant">
-                      CRM-PR 31.904 • Cardiologista e Ecocardiografia
-                    </span>
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-base font-bold text-primary truncate">
+                          Dra. Juliana Prado Mendes
+                        </h3>
+                        <span className="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-bold">
+                          Unimed &amp; Particular
+                        </span>
+                      </div>
+                      <span className="text-xs text-on-surface-variant">
+                        CRM-PR 31.904 • RQE 18.204 • Cardiologista &amp; Ecocardiografia
+                      </span>
+                      <div className="flex items-center gap-2 mt-1 text-xs">
+                        <span className="flex items-center gap-0.5 text-amber-500 font-bold">
+                          <span className="material-symbols-outlined text-[15px]">star</span>
+                          4.9
+                        </span>
+                        <span className="text-on-surface-variant">• 12 anos exp.</span>
+                        <span className="text-emerald-700 font-semibold">• 98% pontualidade</span>
+                      </div>
+                    </div>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setDoctorModalOpen(true)}
+                    className="h-8 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high text-secondary text-xs font-semibold flex items-center gap-1 transition-colors self-start"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">badge</span>
+                    <span>Ver Currículo &amp; Avaliações</span>
+                  </button>
                 </div>
 
                 <div className="flex flex-col gap-1.5 pt-1">
-                  <span className="text-xs text-outline font-medium">Horários disponíveis amanhã:</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-outline font-medium">Horários disponíveis amanhã:</span>
+                    <span className="text-[11px] text-secondary font-semibold">
+                      {selectedShift === 'manha'
+                        ? '4 horários matutinos'
+                        : selectedShift === 'tarde'
+                        ? '2 horários vespertinos'
+                        : '6 horários no total'}
+                    </span>
+                  </div>
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                    {['08:30', '09:15', '10:00', '10:45', '14:00', '15:30'].map((time) => (
-                      <button
-                        key={time}
-                        type="button"
-                        onClick={() => setSelectedSlotTime(time)}
-                        className={`h-10 rounded-xl text-xs font-bold transition-all ${
-                          selectedSlotTime === time
-                            ? 'bg-secondary text-white shadow-sm ring-2 ring-secondary/30'
-                            : 'bg-surface-container-low text-primary hover:bg-surface-container'
-                        }`}
-                      >
-                        {time}
-                      </button>
-                    ))}
+                    {[
+                      { time: '08:30', shift: 'manha' },
+                      { time: '09:15', shift: 'manha' },
+                      { time: '10:00', shift: 'manha' },
+                      { time: '10:45', shift: 'manha' },
+                      { time: '14:00', shift: 'tarde' },
+                      { time: '15:30', shift: 'tarde' },
+                    ]
+                      .filter((slot) => selectedShift === 'todos' || slot.shift === selectedShift)
+                      .map((slot) => (
+                        <button
+                          key={slot.time}
+                          type="button"
+                          onClick={() => setSelectedSlotTime(slot.time)}
+                          className={`h-10 rounded-xl text-xs font-bold transition-all ${
+                            selectedSlotTime === slot.time
+                              ? 'bg-secondary text-white shadow-sm ring-2 ring-secondary/30'
+                              : 'bg-surface-container-low text-primary hover:bg-surface-container'
+                          }`}
+                        >
+                          {slot.time}
+                        </button>
+                      ))}
                   </div>
                 </div>
               </div>
@@ -457,6 +524,88 @@ export default function AgendarPage() {
           </div>
         </div>
       </main>
+
+      {/* Modal / Bottom Sheet: Currículo & Avaliações da Médica */}
+      {doctorModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-100 space-y-4 animate-scaleUp max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary text-[22px]">verified</span>
+                <span className="text-sm font-bold text-primary">Perfil do Corpo Clínico CMAC</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDoctorModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600"
+                aria-label="Fechar"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-bold text-xl shrink-0">
+                JP
+              </div>
+              <div>
+                <h3 className="font-bold text-lg text-primary">Dra. Juliana Prado Mendes</h3>
+                <p className="text-xs text-secondary font-semibold">Cardiologia Clínica &amp; Ecocardiografia</p>
+                <p className="text-xs text-on-surface-variant mt-0.5">CRM-PR 31.904 • RQE 18.204</p>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <div className="flex text-amber-500">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <span key={i} className="material-symbols-outlined text-[16px]">star</span>
+                    ))}
+                  </div>
+                  <span className="text-xs font-bold text-on-surface">4.9</span>
+                  <span className="text-xs text-on-surface-variant">(182 consultas avaliadas)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Formação e Residência */}
+            <div className="bg-surface-container-low p-3.5 rounded-2xl text-xs space-y-1.5 border border-slate-100">
+              <span className="font-bold text-primary block">Formação &amp; Títulos:</span>
+              <p className="text-on-surface-variant">• Graduação em Medicina pela Universidade Federal do Paraná (UFPR).</p>
+              <p className="text-on-surface-variant">• Residência em Cardiologia no Hospital de Clínicas de Curitiba.</p>
+              <p className="text-on-surface-variant">• Título de Especialista pela Sociedade Brasileira de Cardiologia (SBC).</p>
+              <p className="text-on-surface-variant">• Membro ativo do Corpo Clínico da Clínica Adventista de Curitiba há 8 anos.</p>
+            </div>
+
+            {/* Depoimentos Recentes */}
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-primary block">Avaliações Recentes de Pacientes:</span>
+              <div className="p-3 rounded-xl bg-surface-container text-xs space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-on-surface">Mariana C.</span>
+                  <span className="text-[11px] text-amber-600 font-bold">★ 5.0</span>
+                </div>
+                <p className="text-on-surface-variant text-[11px] leading-relaxed">
+                  "Excelente profissional! Muito atenciosa, explicou detalhadamente o ecocardiograma e tirou todas as dúvidas com paciência."
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-surface-container text-xs space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-on-surface">Roberto L.</span>
+                  <span className="text-[11px] text-amber-600 font-bold">★ 5.0</span>
+                </div>
+                <p className="text-on-surface-variant text-[11px] leading-relaxed">
+                  "Pontualidade exemplar e acolhimento humanizado. Recomendo de olhos fechados."
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setDoctorModalOpen(false)}
+              className="w-full h-11 rounded-xl bg-primary text-on-primary font-bold text-xs hover:bg-primary-container transition-all"
+            >
+              Prosseguir com Agendamento
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
