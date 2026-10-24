@@ -1,0 +1,16 @@
+{
+  "name": "Centro Médico Adventista Curitiba",
+  "short_name": "CMAC Portal",
+  "description": "Portal de Autoatendimento do Centro Médico Adventista de Curitiba",
+  "start_url": "/inicio",
+  "display": "standalone",
+  "background_color": "#f8f9ff",
+  "theme_color": "#00244a",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

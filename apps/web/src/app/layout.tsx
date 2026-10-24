@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
 import { PortalShell } from '../components/portal-shell';
@@ -7,6 +7,15 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Portal de Atendimento Digital | Clínica Adventista de Curitiba',
   description: 'Autoatendimento institucional e gestão de consultas da Clínica Adventista de Curitiba.',
+  manifest: '/manifest.json',
+};
+
+export const viewport: Viewport = {
+  themeColor: '#00244a',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 const tailwindConfigJson = JSON.stringify({
