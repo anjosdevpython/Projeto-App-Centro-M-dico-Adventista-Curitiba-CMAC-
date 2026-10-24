@@ -1,0 +1,2 @@
+DROP INDEX "appointments_active_slot_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX "appointments_active_slot_unique" ON "appointments" USING btree ("slot_id") WHERE "appointments"."status" <> 'cancelled';
