@@ -23,18 +23,18 @@ export default function InicioPage() {
 
   return (
     <div
-      className={`flex flex-col min-h-screen bg-background pb-12 ${
+      className={`flex flex-col min-h-screen bg-background pb-12 animate-fade-in-up ${
         highContrast ? 'contrast-125' : ''
       }`}
       style={{ fontSize: `${fontSize}px` }}
     >
-      {/* Top Header - Responsive */}
-      <header className="sticky top-0 inset-x-0 z-40 bg-primary-container text-on-primary shadow-md">
+      {/* Top Header - Glass Header */}
+      <header className="sticky top-0 inset-x-0 z-40 bg-primary-container/95 backdrop-blur-md text-on-primary shadow-sm border-b border-white/10">
         <div className="px-4 lg:px-8 flex items-center justify-between h-16 max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <img
               alt="Clínica Adventista"
-              className="w-8 h-8 rounded-lg object-contain shadow-sm bg-white/10 p-0.5 shrink-0"
+              className="w-9 h-9 rounded-xl object-contain shadow-sm bg-white/10 p-0.5 shrink-0 transition-transform duration-300 hover:scale-105"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrk3vT9w5PgltHzhH3M6CDRfoi4uKJJeeX4UiFhgKiEkObRjBYPJ4qSt6HxxPdEa2zxCEG8-_AhLPoWEm0A8OkaU7BNU2zKTx6R_1hoeCJtggc67-PlNJ37bK1fQ5F3_1juA2_C-WxnMGHzQ_Ga1nkWlz6WhWcLC3rz2HUEghccWwhaHGoC3WadFBUCR0JH1da8X4N51WAm8bTthLprdHNpKLCkq2RieoYLMl93gjPR4nR9Jq48PTx_To2hquGOnRKpw"
             />
             <div className="flex flex-col min-w-0 pr-1">
@@ -54,7 +54,7 @@ export default function InicioPage() {
                 type="button"
                 aria-label="Diminuir fonte"
                 onClick={() => setFontSize(Math.max(14, fontSize - 1))}
-                className="w-7 h-7 flex items-center justify-center rounded text-surface-container-lowest hover:bg-white/10 text-xs font-bold"
+                className="w-7 h-7 flex items-center justify-center rounded text-surface-container-lowest hover:bg-white/15 text-xs font-bold transition-colors"
               >
                 A-
               </button>
@@ -62,7 +62,7 @@ export default function InicioPage() {
                 type="button"
                 aria-label="Aumentar fonte"
                 onClick={() => setFontSize(Math.min(20, fontSize + 1))}
-                className="w-7 h-7 flex items-center justify-center rounded text-surface-container-lowest hover:bg-white/10 text-xs font-bold"
+                className="w-7 h-7 flex items-center justify-center rounded text-surface-container-lowest hover:bg-white/15 text-xs font-bold transition-colors"
               >
                 A+
               </button>
@@ -70,7 +70,7 @@ export default function InicioPage() {
                 type="button"
                 aria-label="Alternar contraste"
                 onClick={() => setHighContrast(!highContrast)}
-                className="w-7 h-7 flex items-center justify-center rounded text-surface-container-lowest hover:bg-white/10"
+                className="w-7 h-7 flex items-center justify-center rounded text-surface-container-lowest hover:bg-white/15 transition-colors"
               >
                 <span className="material-symbols-outlined text-[16px]">contrast</span>
               </button>
@@ -78,13 +78,13 @@ export default function InicioPage() {
             <a
               href="/ajuda"
               aria-label="Suporte e ajuda"
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-surface-container-lowest hover:bg-white/10 transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-surface-container-lowest hover:bg-white/15 transition-colors"
             >
               <span className="material-symbols-outlined text-[20px]">contact_support</span>
             </a>
             <a
               href="/perfil"
-              className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-inner ml-1"
+              className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-inner ml-1 ring-1 ring-white/20 transition-transform hover:scale-105"
             >
               <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
             </a>
@@ -94,21 +94,26 @@ export default function InicioPage() {
 
       {/* Main Container: Mobile Single Column & Desktop 2-Column Grid */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 py-6 flex flex-col gap-6">
-        {/* Banner de Boas-vindas (Stitch) */}
-        <section className="w-full rounded-2xl bg-gradient-to-br from-primary-container via-primary-container to-primary p-5 lg:p-7 text-on-primary shadow-md relative overflow-hidden">
+        {/* Banner de Boas-vindas (Stitch com Glow Radiante) */}
+        <section className="w-full rounded-2xl bg-radial-hero p-5 lg:p-7 text-on-primary shadow-lg relative overflow-hidden border border-white/10">
           <div
             aria-hidden="true"
-            className="absolute -right-8 -bottom-10 w-64 h-64 rounded-full bg-secondary/20 blur-3xl pointer-events-none"
+            className="absolute -right-8 -bottom-10 w-72 h-72 rounded-full bg-secondary/25 blur-3xl pointer-events-none animate-pulse-soft"
           ></div>
+          <div
+            aria-hidden="true"
+            className="absolute -left-12 -top-12 w-56 h-56 rounded-full bg-secondary-container/15 blur-2xl pointer-events-none"
+          ></div>
+
           <div className="relative z-10 flex flex-col gap-2">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-fixed/20 text-secondary-fixed text-xs font-semibold">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-fixed/20 backdrop-blur-md text-secondary-fixed text-xs font-semibold border border-white/10">
                 <span className="material-symbols-outlined text-[16px] text-tertiary-fixed">
                   verified_user
                 </span>
                 <span>{session?.role === 'medico' ? 'Corpo Clínico Conectado' : 'Portal do Paciente'}</span>
               </div>
-              <span className="text-xs text-primary-fixed-dim font-mono bg-black/20 px-2 py-0.5 rounded">
+              <span className="text-xs text-primary-fixed-dim font-mono bg-black/25 backdrop-blur-sm px-2.5 py-0.5 rounded-full border border-white/10">
                 Protocolo: {session?.protocol ?? 'CMAC-DEMO-2026'}
               </span>
             </div>
@@ -126,7 +131,7 @@ export default function InicioPage() {
                   </span>
                 </p>
               </div>
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center shrink-0 ring-2 ring-white/15 shadow-sm">
                 <span className="material-symbols-outlined text-secondary-fixed text-[30px] md:text-[34px]">
                   account_circle
                 </span>
@@ -155,13 +160,13 @@ export default function InicioPage() {
                 <span className="text-xs text-on-surface-variant font-medium">Autoatendimento</span>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5">
                 {/* Card 1: Agendar Consulta */}
                 <a
                   href="/agendar"
-                  className="group relative rounded-xl bg-gradient-to-br from-secondary to-primary-container p-4 text-on-primary shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex flex-col justify-between min-h-[140px]"
+                  className="card-interactive group relative rounded-2xl bg-gradient-to-br from-secondary via-secondary to-primary-container p-4 text-on-primary shadow-sm flex flex-col justify-between min-h-[145px] overflow-hidden"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center text-on-primary shadow-inner">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-on-primary shadow-inner">
                     <span className="material-symbols-outlined text-[24px]">calendar_add_on</span>
                   </div>
                   <div className="mt-3 flex flex-col">
@@ -172,7 +177,7 @@ export default function InicioPage() {
                       Consultas e Exames
                     </span>
                   </div>
-                  <div className="absolute top-3 right-3 text-white/40 group-hover:text-white transition-colors">
+                  <div className="absolute top-3 right-3 text-white/50 group-hover:text-white group-hover:translate-x-0.5 transition-all">
                     <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                   </div>
                 </a>
@@ -180,9 +185,9 @@ export default function InicioPage() {
                 {/* Card 2: Check-in Ágil */}
                 <a
                   href="/agendamentos"
-                  className="group relative rounded-xl bg-surface-container-lowest border border-slate-200/80 p-4 shadow-sm hover:shadow-md hover:border-secondary transition-all active:scale-[0.98] flex flex-col justify-between min-h-[140px]"
+                  className="card-interactive group relative rounded-2xl bg-surface-container-lowest border border-slate-200/80 p-4 shadow-sm hover:border-secondary flex flex-col justify-between min-h-[145px]"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-surface-container text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                     <span className="material-symbols-outlined text-[24px]">qr_code_scanner</span>
                   </div>
                   <div className="mt-3 flex flex-col">
@@ -201,9 +206,9 @@ export default function InicioPage() {
                 {/* Card 3: Minhas Consultas */}
                 <a
                   href="/agendamentos"
-                  className="group relative rounded-xl bg-surface-container-lowest border border-slate-200/80 p-4 shadow-sm hover:shadow-md hover:border-secondary transition-all active:scale-[0.98] flex flex-col justify-between min-h-[140px]"
+                  className="card-interactive group relative rounded-2xl bg-surface-container-lowest border border-slate-200/80 p-4 shadow-sm hover:border-secondary flex flex-col justify-between min-h-[145px]"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-surface-container text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                     <span className="material-symbols-outlined text-[24px]">event_note</span>
                   </div>
                   <div className="mt-3 flex flex-col">
@@ -219,9 +224,9 @@ export default function InicioPage() {
                 {/* Card 4: Teleconsulta */}
                 <a
                   href="/agendar"
-                  className="group relative rounded-xl bg-surface-container-lowest border border-slate-200/80 p-4 shadow-sm hover:shadow-md hover:border-secondary transition-all active:scale-[0.98] flex flex-col justify-between min-h-[140px]"
+                  className="card-interactive group relative rounded-2xl bg-surface-container-lowest border border-slate-200/80 p-4 shadow-sm hover:border-secondary flex flex-col justify-between min-h-[145px]"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-surface-container text-secondary flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-surface-container text-secondary flex items-center justify-center group-hover:bg-secondary group-hover:text-white transition-colors">
                     <span className="material-symbols-outlined text-[24px]">video_camera_front</span>
                   </div>
                   <div className="mt-3 flex flex-col">
@@ -237,14 +242,14 @@ export default function InicioPage() {
                 {/* Card 5: Resultados e Laudos */}
                 <a
                   href="/agendamentos"
-                  className="group relative rounded-xl bg-surface-container-lowest border border-slate-200/80 p-4 shadow-sm hover:shadow-md hover:border-secondary transition-all active:scale-[0.98] flex flex-col justify-between min-h-[140px]"
+                  className="card-interactive group relative rounded-2xl bg-surface-container-lowest border border-slate-200/80 p-4 shadow-sm hover:border-secondary flex flex-col justify-between min-h-[145px]"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-surface-container text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                     <span className="material-symbols-outlined text-[24px]">description</span>
                   </div>
                   <div className="mt-3 flex flex-col">
                     <span className="text-base font-bold leading-tight text-primary">
-                      Laudos & Exames
+                      Laudos &amp; Exames
                     </span>
                     <span className="text-[11px] text-on-surface-variant mt-0.5">
                       Central digital
@@ -255,9 +260,9 @@ export default function InicioPage() {
                 {/* Card 6: Central de Preparos */}
                 <a
                   href="/agendamentos"
-                  className="group relative rounded-xl bg-surface-container-lowest border border-slate-200/80 p-4 shadow-sm hover:shadow-md hover:border-secondary transition-all active:scale-[0.98] flex flex-col justify-between min-h-[140px]"
+                  className="card-interactive group relative rounded-2xl bg-surface-container-lowest border border-slate-200/80 p-4 shadow-sm hover:border-amber-400 flex flex-col justify-between min-h-[145px]"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
                     <span className="material-symbols-outlined text-[24px]">warning_amber</span>
                   </div>
                   <div className="mt-3 flex flex-col">
@@ -273,10 +278,10 @@ export default function InicioPage() {
             </section>
 
             {/* Apoio e Assistência Humanizada */}
-            <section className="w-full rounded-2xl bg-surface-container-lowest p-5 shadow-sm flex flex-col gap-4 border border-slate-200/80">
+            <section className="card-interactive w-full rounded-2xl bg-surface-container-lowest p-5 md:p-6 shadow-sm flex flex-col gap-4 border border-slate-200/80">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary shrink-0">
-                  <span className="material-symbols-outlined text-[22px]">volunteer_activism</span>
+                <div className="w-11 h-11 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary shrink-0">
+                  <span className="material-symbols-outlined text-[24px]">volunteer_activism</span>
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-primary">Precisa de Ajuda Humanizada?</h3>
@@ -291,7 +296,7 @@ export default function InicioPage() {
                   href="https://wa.me/554130518000"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="h-12 rounded-xl bg-surface-container text-primary text-xs md:text-sm font-semibold flex items-center justify-between px-4 hover:bg-surface-container-high transition-colors"
+                  className="card-interactive h-12 rounded-xl bg-surface-container text-primary text-xs md:text-sm font-semibold flex items-center justify-between px-4 hover:bg-surface-container-high transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
                     <span className="material-symbols-outlined text-[20px] text-tertiary">chat</span>
@@ -303,7 +308,7 @@ export default function InicioPage() {
                 </a>
                 <a
                   href="tel:04130518000"
-                  className="h-12 rounded-xl bg-surface-container text-primary text-xs md:text-sm font-semibold flex items-center justify-between px-4 hover:bg-surface-container-high transition-colors"
+                  className="card-interactive h-12 rounded-xl bg-surface-container text-primary text-xs md:text-sm font-semibold flex items-center justify-between px-4 hover:bg-surface-container-high transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
                     <span className="material-symbols-outlined text-[20px] text-primary">call</span>
@@ -325,7 +330,7 @@ export default function InicioPage() {
                   <span className="text-xs text-on-surface-variant font-medium">Autoatendimento</span>
                 </div>
 
-                <div className="w-full rounded-2xl bg-surface-container-lowest shadow-sm p-5 flex flex-col gap-4 border border-slate-200/80">
+                <div className="card-interactive w-full rounded-2xl bg-surface-container-lowest shadow-sm p-5 flex flex-col gap-4 border border-slate-200/80 hover:border-secondary">
                   <div className="flex items-start gap-3.5">
                     <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-primary shrink-0 mt-0.5">
                       <span className="material-symbols-outlined text-[28px]">cardiology</span>
@@ -336,7 +341,7 @@ export default function InicioPage() {
                           Consulta Presencial
                         </span>
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container text-primary text-xs font-mono">
-                          <span className="w-2 h-2 rounded-full bg-tertiary-fixed"></span>
+                          <span className="w-2 h-2 rounded-full bg-tertiary-fixed animate-pulse"></span>
                           {nextAppointment.protocol}
                         </span>
                       </div>
@@ -388,14 +393,14 @@ export default function InicioPage() {
                   <div className="flex gap-2 pt-1">
                     <a
                       href="/agendamentos"
-                      className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary-container text-on-primary text-xs md:text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all"
+                      className="btn-glow flex-1 h-12 rounded-xl bg-primary hover:bg-primary-container text-on-primary text-xs md:text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all"
                     >
                       <span className="material-symbols-outlined text-[18px]">how_to_reg</span>
                       <span>Check-in Prévio</span>
                     </a>
                     <a
                       href="/agendamentos"
-                      className="h-12 px-4 rounded-xl bg-surface-container text-primary text-xs md:text-sm font-semibold flex items-center justify-center gap-1.5 hover:bg-surface-container-high transition-colors"
+                      className="card-interactive h-12 px-4 rounded-xl bg-surface-container text-primary text-xs md:text-sm font-semibold flex items-center justify-center gap-1.5 hover:bg-surface-container-high transition-colors"
                     >
                       <span className="material-symbols-outlined text-[18px]">edit_calendar</span>
                       <span>Gerenciar</span>
@@ -408,11 +413,11 @@ export default function InicioPage() {
             {/* Prontuário & Convênio Sincronizado */}
             <section className="w-full flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg text-primary font-bold tracking-tight">Prontuário & Convênio</h2>
+                <h2 className="text-lg text-primary font-bold tracking-tight">Prontuário &amp; Convênio</h2>
                 <span className="text-xs text-on-surface-variant font-medium">Sincronizado MV</span>
               </div>
 
-              <div className="w-full p-5 rounded-2xl bg-surface-container-lowest shadow-sm flex items-center justify-between gap-3 border border-slate-200/80">
+              <div className="card-interactive w-full p-5 rounded-2xl bg-surface-container-lowest shadow-sm flex items-center justify-between gap-3 border border-slate-200/80 hover:border-secondary">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div className="w-11 h-11 rounded-xl bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed shrink-0">
                     <span className="material-symbols-outlined text-[24px]">verified</span>
