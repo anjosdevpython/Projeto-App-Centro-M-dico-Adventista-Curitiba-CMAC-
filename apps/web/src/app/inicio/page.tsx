@@ -84,9 +84,14 @@ export default function InicioPage() {
             </a>
             <a
               href="/perfil"
-              className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-inner ml-1 ring-1 ring-white/20 transition-transform hover:scale-105"
+              title="Meu Perfil"
+              className="w-9 h-9 rounded-full overflow-hidden shadow-sm ml-1 ring-2 ring-white/30 transition-transform hover:scale-105 shrink-0"
             >
-              <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
+              <img
+                src={session?.role === 'medico' ? '/avatars/medico.jpg' : '/avatars/paciente.jpg'}
+                alt="Perfil"
+                className="w-full h-full object-cover"
+              />
             </a>
           </div>
         </div>
