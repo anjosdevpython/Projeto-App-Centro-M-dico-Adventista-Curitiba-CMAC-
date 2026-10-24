@@ -36,6 +36,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
     { href: '/teleconsulta', label: 'Teleconsulta', icon: 'video_camera_front', badge: 'Ao Vivo' },
     { href: '/prescricoes', label: 'Receitas', icon: 'prescriptions' },
     { href: '/laudos', label: 'Laudos', icon: 'description' },
+    { href: '/termos', label: 'Termos & TCLE', icon: 'draw' },
     { href: '/checkin', label: 'Check-in', icon: 'qr_code_scanner' },
     { href: '/perfil', label: 'Perfil', icon: 'badge' },
   ];
