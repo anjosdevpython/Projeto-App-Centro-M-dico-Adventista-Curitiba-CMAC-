@@ -1,47 +1,65 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { RegisterForm } from '../src/features/auth/register-form';
 
-describe('RegisterForm', () => {
-  it('generates patient credentials with 1-click button', async () => {
+describe('RegisterForm Stitch UI', () => {
+  it('switches between patient and medical team tabs', async () => {
     const user = userEvent.setup();
     render(<RegisterForm />);
 
-    const quickBtn = screen.getByRole('button', { name: /gerar credencial de paciente/i });
-    await user.click(quickBtn);
+    expect(screen.getByRole('tab', { name: /sou paciente/i })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.getByText(/cpf ou número do prontuário/i)).toBeInTheDocument();
 
-    expect(await screen.findByRole('status')).toBeInTheDocument();
-    expect(screen.getByText(/credencial de paciente ativa/i)).toBeInTheDocument();
-    expect(screen.getByText(/paciente.demonstrativo@cmac.demo/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /acessar portal demonstrativo/i })).toHaveAttribute('href', '/inicio');
+    const doctorTab = screen.getByRole('tab', { name: /corpo clínico/i });
+    await user.click(doctorTab);
+
+    expect(doctorTab).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText(/crm \/ uf ou matrícula médica/i)).toBeInTheDocument();
   });
 
-  it('generates medical team credentials with 1-click button', async () => {
+  it('generates patient credentials and gives portal access on submit', async () => {
     const user = userEvent.setup();
     render(<RegisterForm />);
 
-    const quickDocBtn = screen.getByRole('button', { name: /gerar credencial da equipe médica/i });
-    await user.click(quickDocBtn);
+    const submitBtn = screen.getByRole('button', { name: /entrar com segurança/i });
+    await user.click(submitBtn);
 
     expect(await screen.findByRole('status')).toBeInTheDocument();
-    expect(screen.getByText(/credencial da equipe médica ativa/i)).toBeInTheDocument();
-    expect(screen.getByText(/CRM-PR 28941/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /acessar painel da equipe médica/i })).toHaveAttribute('href', '/inicio');
+    expect(screen.getByText(/acesso demonstrativo liberado/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /acessar portal do paciente/i })).toHaveAttribute(
+      'href',
+      '/inicio',
+    );
   });
 
-  it('generates credentials via manual form submission', async () => {
+  it('generates doctor credentials when submitting on doctor profile', async () => {
     const user = userEvent.setup();
     render(<RegisterForm />);
 
-    const emailInput = screen.getByLabelText(/^e-mail/i);
-    await user.clear(emailInput);
-    await user.type(emailInput, 'novo.paciente@exemplo.com');
-
-    await user.click(screen.getByRole('button', { name: /^criar acesso$/i }));
+    await user.click(screen.getByRole('tab', { name: /corpo clínico/i }));
+    await user.click(screen.getByRole('button', { name: /entrar com segurança/i }));
 
     expect(await screen.findByRole('status')).toBeInTheDocument();
-    expect(screen.getByText(/novo.paciente@exemplo.com/i)).toBeInTheDocument();
+    expect(screen.getByText(/equipe médica conectada/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /acessar agenda do corpo clínico/i })).toHaveAttribute(
+      'href',
+      '/medico',
+    );
+  });
+
+  it('allows quick 1-touch login with biometric button', async () => {
+    const user = userEvent.setup();
+    render(<RegisterForm />);
+
+    const bioBtn = screen.getByRole('button', { name: /entrar com biometria/i });
+    await user.click(bioBtn);
+
+    expect(await screen.findByRole('status')).toBeInTheDocument();
+    expect(screen.getByText(/acesso demonstrativo liberado/i)).toBeInTheDocument();
   });
 });

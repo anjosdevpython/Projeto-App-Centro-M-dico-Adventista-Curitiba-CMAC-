@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { describe, expect, it } from 'vitest';
@@ -24,8 +24,8 @@ describe('Accessibility tests', () => {
 
     expect((await axe(container)).violations).toEqual([]);
 
-    const quickBtn = screen.getByRole('button', { name: /gerar credencial de paciente/i });
-    await user.click(quickBtn);
+    const submitBtn = container.querySelector('button[type="submit"]') as HTMLElement;
+    await user.click(submitBtn);
 
     expect((await axe(container)).violations).toEqual([]);
   });
