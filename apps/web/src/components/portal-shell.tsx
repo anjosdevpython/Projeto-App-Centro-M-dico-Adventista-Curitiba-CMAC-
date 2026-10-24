@@ -193,19 +193,26 @@ export function PortalShell({ children }: { children: ReactNode }) {
               </div>
             </nav>
 
-            {/* Desktop User Footer / Unit Badge */}
-            <div className="p-4 border-t border-slate-100 bg-surface-container-low/50">
+            {/* Desktop User Footer / Profile Avatar Card */}
+            <div className="p-3.5 border-t border-slate-100 bg-surface-container-low/50">
               <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
-                <div className="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs shrink-0">
-                  <span className="material-symbols-outlined text-[18px]">
-                    {isDoctorRoute ? 'stethoscope' : 'person'}
-                  </span>
+                <div className="relative shrink-0">
+                  <img
+                    src={isDoctorRoute ? '/avatars/medico.jpg' : '/avatars/paciente.jpg'}
+                    alt={isDoctorRoute ? 'Dr. Marcos Vinícius' : 'Carlos Silva'}
+                    className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm"
+                  />
+                  <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                    isDoctorRoute ? 'bg-secondary' : 'bg-emerald-500'
+                  }`} />
                 </div>
                 {!isCollapsed && (
                   <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold text-on-surface truncate">Unidade Curitiba - Juvevê</span>
+                    <span className="text-xs font-bold text-on-surface truncate">
+                      {isDoctorRoute ? 'Dr. Marcos Vinícius' : 'Carlos Silva'}
+                    </span>
                     <span className="text-[11px] text-secondary font-medium truncate">
-                      {isDoctorRoute ? 'Consultório 04 • Ala Médica' : 'Recepção Digital Integrada'}
+                      {isDoctorRoute ? 'CRM-PR 28.412 • Cardiologista' : 'Matrícula MV #84920'}
                     </span>
                   </div>
                 )}

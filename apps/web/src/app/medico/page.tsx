@@ -44,9 +44,11 @@ export default function MedicoPage() {
         <div className="h-18 px-4 lg:px-8 py-2.5 flex items-center justify-between gap-3 max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-3.5 min-w-0">
             <div className="relative shrink-0">
-              <div className="w-11 h-11 rounded-full bg-secondary-container flex items-center justify-center text-primary font-bold">
-                <span className="material-symbols-outlined text-[24px]">stethoscope</span>
-              </div>
+              <img
+                src="/avatars/medico.jpg"
+                alt="Dr. Marcos Vinícius"
+                className="w-12 h-12 rounded-full object-cover ring-2 ring-white/30 shadow-sm"
+              />
               <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-tertiary-fixed rounded-full ring-2 ring-primary"></span>
             </div>
             <div className="flex flex-col min-w-0">

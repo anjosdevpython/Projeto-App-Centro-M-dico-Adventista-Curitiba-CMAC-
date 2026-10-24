@@ -131,10 +131,12 @@ export default function InicioPage() {
                   </span>
                 </p>
               </div>
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center shrink-0 ring-2 ring-white/15 shadow-sm">
-                <span className="material-symbols-outlined text-secondary-fixed text-[30px] md:text-[34px]">
-                  account_circle
-                </span>
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden shrink-0 ring-2 ring-white/30 shadow-md">
+                <img
+                  src={session?.role === 'medico' ? '/avatars/medico.jpg' : '/avatars/paciente.jpg'}
+                  alt={session?.patientName ?? 'Perfil'}
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
 

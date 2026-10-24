@@ -237,11 +237,16 @@ export default function PerfilPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Coluna Principal: 7 cols (Identificação, Atualização Cadastral e Documentos) */}
           <div className="lg:col-span-7 flex flex-col gap-6">
-            {/* Header Card: Identificação do Paciente do Stitch */}
+            {/* Header Card: Identificação do Paciente com Foto Real */}
             <section className="p-5 md:p-6 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col gap-4 border border-slate-200/80">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-primary text-secondary-fixed flex items-center justify-center font-bold text-2xl shrink-0 shadow-inner">
-                  <span className="material-symbols-outlined text-[36px]">account_circle</span>
+                <div className="relative w-18 h-18 rounded-2xl overflow-hidden shrink-0 shadow-md ring-2 ring-primary/20 bg-slate-100">
+                  <img
+                    src="/avatars/paciente.jpg"
+                    alt={patientName}
+                    className="w-full h-full object-cover"
+                  />
+                  <span className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
