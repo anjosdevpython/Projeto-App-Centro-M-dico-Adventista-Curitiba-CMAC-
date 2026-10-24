@@ -1,56 +1,64 @@
-# Clínica Adventista Atendimento Automation Implementation Plan
+# CMAC Patient Self-Service Portal Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Entregar um piloto Docker funcional que automatize de ponta a ponta as jornadas administrativas da clínica com Chatwoot, n8n, Integration Core e um simulador contratual da Soul MV.
+**Goal:** Deliver an executable, mobile-first patient portal for Centro Médico Adventista Curitiba (CMAC) that demonstrates secure identity, appointment discovery, booking, cancellation, rescheduling, protocols, and support with synthetic data.
 
-**Architecture:** Chatwoot mantém os canais e o histórico; n8n orquestra jornadas importáveis; uma API Fastify/TypeScript concentra contratos, regras, idempotência, persistência e adaptadores. PostgreSQL é a fonte de verdade, Redis fornece locks/cache, e mocks substituíveis permitem demonstrar tudo antes das credenciais reais.
+**Architecture:** A pnpm monorepo contains a Next.js web app and a Fastify API. PostgreSQL persists accounts, sessions, journeys, idempotency records, appointments, protocols, support requests, and audit events; a typed `SoulMvPort` isolates a synthetic adapter from a future authorized HTTP adapter. Critical rules remain in the API, while n8n and Chatwoot are optional adapters for later notifications and human support.
 
-**Tech Stack:** Node.js 22 LTS, pnpm 10, TypeScript 5.7, Fastify 5, Zod 3, Drizzle ORM, PostgreSQL 16, Redis 7.4, Vitest 3, n8n 2.44.5, Chatwoot 4.17.1, Docker Compose, Caddy 2.9, Prometheus e Grafana.
+**Tech Stack:** Node.js 22 LTS, pnpm 10, TypeScript strict mode, Next.js App Router, React, Fastify, Zod, Drizzle ORM, PostgreSQL 16, Argon2id, Vitest, Testing Library, Playwright, axe-core, Docker Compose, OpenTelemetry-compatible structured telemetry.
 
 **Spec:** `docs/superpowers/specs/2026-10-23-clinica-atendimento-automation-design.md`
 
 ## Global Constraints
 
-- Nenhuma etapa administrativa normal exige atendente; handoff humano é contingência.
-- Não diagnosticar, interpretar sintomas, recomendar tratamento ou dar orientação médica.
-- O piloto usa somente dados sintéticos.
-- n8n chama apenas a API interna; formatos Soul MV ficam restritos aos adaptadores.
-- Toda mutação externa exige idempotência e auditoria.
-- Segredos nunca entram no Git nem nos JSONs do n8n.
-- O sistema funciona sem provedor de IA por meio de menus determinísticos.
-- Imagens de produção permanecem fixadas em `n8nio/n8n:2.44.5` e `chatwoot/chatwoot:v4.17.1` até atualização validada.
+- Use the institutional name **Centro Médico Adventista Curitiba (CMAC)**.
+- The conventional web interface must complete every normal first-release journey without a chatbot.
+- All demonstration data is synthetic and every demo screen displays “Ambiente de demonstração — nenhum atendimento real será realizado”.
+- Never invent SOUL MV endpoints, credentials, schemas, events, or licensed capabilities.
+- The real SOUL MV adapter remains disabled until authorized documentation and homologation access exist.
+- CPF alone never authenticates a patient.
+- The API authorizes every patient-owned read and mutation.
+- Never report booking, cancellation, or rescheduling as complete without conclusive confirmation from the active source-of-truth adapter.
+- Every external mutation is idempotent and every uncertain result is reconciled before retry.
+- Sensitive data is never placed in offline caches, logs, metrics, URLs, analytics payloads, or client-readable environment variables.
+- The main mobile and keyboard journeys target WCAG 2.2 AA.
+- Verify stable dependency releases before lockfile creation; record the chosen versions in `docs/architecture/DEPENDENCIES.md`.
+- Use test-first red/green/refactor for production behavior.
 
 ## File Map
 
 ```text
-apps/core/                       API e regras administrativas
-  src/app.ts                     composição Fastify
-  src/config.ts                  ambiente validado
-  src/modules/catalog/           catálogo e orientação administrativa
-  src/modules/patients/          identificação mínima
-  src/modules/appointments/      disponibilidade e marcações
-  src/modules/waitlist/          oferta concorrente de vagas
-  src/modules/messages/          cadências e templates
-  src/modules/handoff/           contingência Chatwoot
-  src/modules/audit/             eventos sanitizados
-  src/ports/soul-mv.ts           contrato independente da MV
-  src/adapters/soul-mv-mock/     implementação sintética
-  src/adapters/soul-mv-http/     casca desativada para API real
-  src/db/                        schema, migrações e repositórios
-  test/                          unitários, contrato e integração
-apps/mv-mock/                    servidor HTTP que simula cenários externos
-workflows/n8n/                   JSONs importáveis e manifesto
-infra/compose/                   stacks dev e produção
-infra/caddy/                     proxy e TLS
-infra/observability/             métricas, dashboards e alertas
-scripts/                         bootstrap, importação e smoke tests
-docs/runbooks/                   instalação, operação, backup e homologação
+apps/
+  api/
+    src/app.ts                         Fastify composition root
+    src/config.ts                      validated server configuration
+    src/auth/                          accounts, sessions, verification and authorization
+    src/catalog/                       catalog use cases and HTTP routes
+    src/appointments/                  holds, booking, cancellation and rescheduling
+    src/protocols/                     immutable operation receipts
+    src/support/                       patient-visible exception requests
+    src/audit/                         sanitized audit events
+    src/integrations/soul-mv/          port, demo adapter and disabled HTTP adapter
+    src/db/                            Drizzle schema, migrations and repositories
+    test/                              API unit, integration and contract tests
+  web/
+    src/app/                           public and authenticated App Router routes
+    src/components/                    shared accessible interface primitives
+    src/features/                      auth, catalog, booking, appointments and support
+    src/lib/api/                       typed browser-to-API client
+    test/                              component and accessibility tests
+packages/
+  contracts/                           shared Zod schemas and transport types
+test/e2e/                              Playwright user journeys
+infra/compose/                         development and test stacks
+docs/architecture/                     decisions, sources and dependency record
+docs/runbooks/                         install, operate, backup, rollback and homologate
 ```
 
 ---
 
-### Task 1: Workspace executável e verificação local
+### Task 1: Executable Workspace and Environment Contract
 
 **Files:**
 - Create: `package.json`
@@ -59,613 +67,634 @@ docs/runbooks/                   instalação, operação, backup e homologaçã
 - Create: `.editorconfig`
 - Create: `.gitignore`
 - Create: `.env.example`
-- Create: `scripts/verify-env.mjs`
-- Test: `test/verify-env.test.ts`
+- Create: `scripts/validate-env.mjs`
+- Create: `test/validate-env.test.ts`
+- Create: `docs/architecture/DEPENDENCIES.md`
 
 **Interfaces:**
-- Produces: comandos raiz `pnpm test`, `pnpm lint`, `pnpm typecheck`; variáveis validadas por `scripts/verify-env.mjs`.
+- Produces: root commands `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`; `validateEnv(input): AppEnvironment`.
 
-- [ ] **Step 1: Escrever o teste de ambiente**
+- [ ] **Step 1: Verify supported releases and write the dependency record**
+
+Run `node --version`, `corepack pnpm --version`, and package-registry queries for the planned libraries. Record exact selected versions, official support links, consultation date, and rationale in `docs/architecture/DEPENDENCIES.md`. Keep Node on the supported 22 LTS line.
+
+- [ ] **Step 2: Write the failing environment test**
 
 ```ts
-import { describe, expect, it } from 'vitest';
-import { validateEnv } from '../scripts/verify-env.mjs';
+it('accepts an explicit demo environment and rejects a real adapter without credentials', () => {
+  expect(validateEnv({
+    APP_ENV: 'demo',
+    DATABASE_URL: 'postgres://clinic:clinic@localhost:5432/clinic',
+    SESSION_SECRET: '0123456789abcdef0123456789abcdef',
+    SOUL_MV_ADAPTER: 'demo',
+  }).appEnv).toBe('demo');
 
-describe('validateEnv', () => {
-  it('rejects missing secrets and accepts explicit mock configuration', () => {
-    expect(() => validateEnv({ APP_MODE: 'pilot' })).toThrow('DATABASE_URL');
-    expect(validateEnv({
-      APP_MODE: 'pilot', DATABASE_URL: 'postgres://app:app@db/app',
-      REDIS_URL: 'redis://redis:6379', INTERNAL_API_KEY: 'x'.repeat(32),
-      SOUL_MV_MODE: 'mock', WHATSAPP_MODE: 'mock'
-    }).SOUL_MV_MODE).toBe('mock');
-  });
+  expect(() => validateEnv({
+    APP_ENV: 'homologation',
+    DATABASE_URL: 'postgres://clinic:clinic@localhost:5432/clinic',
+    SESSION_SECRET: '0123456789abcdef0123456789abcdef',
+    SOUL_MV_ADAPTER: 'http',
+  })).toThrow(/SOUL_MV_BASE_URL/);
 });
 ```
 
-- [ ] **Step 2: Executar o teste e confirmar falha**
+- [ ] **Step 3: Run the test and observe the expected failure**
 
-Run: `pnpm exec vitest run test/verify-env.test.ts`
-Expected: FAIL porque `scripts/verify-env.mjs` ainda não existe.
+Run: `corepack pnpm exec vitest run test/validate-env.test.ts`
+Expected: FAIL because `scripts/validate-env.mjs` does not exist.
 
-- [ ] **Step 3: Criar workspace, scripts e validador**
+- [ ] **Step 4: Create the minimal workspace and validator**
 
-```json
-{
-  "name": "clinica-atendimento-automation",
-  "private": true,
-  "packageManager": "pnpm@10.18.1",
-  "scripts": {
-    "test": "vitest run",
-    "lint": "eslint .",
-    "typecheck": "tsc -b",
-    "verify:env": "node scripts/verify-env.mjs"
-  },
-  "dependencies": { "zod": "3.25.76" },
-  "devDependencies": { "typescript": "5.7.3", "vitest": "3.2.4", "eslint": "9.38.0" }
-}
-```
+Define explicit schemas for `APP_ENV=development|demo|homologation|production`, `SOUL_MV_ADAPTER=demo|http`, database URL, session secret, public origins, and conditional HTTP-adapter settings. Root scripts must fail when a workspace script fails.
 
-Implementar `validateEnv` com Zod, exigir as cinco variáveis mostradas no teste e rejeitar `SOUL_MV_MODE=live` sem `SOUL_MV_BASE_URL` e `SOUL_MV_API_KEY`. Incluir `.superpowers/`, `.env`, volumes, backups e artefatos de teste no `.gitignore`; preservar o PDF existente.
+- [ ] **Step 5: Verify the workspace**
 
-- [ ] **Step 4: Instalar e validar**
+Run: `pnpm test && pnpm lint && pnpm typecheck`
+Expected: all configured checks exit 0 and the environment test passes.
 
-Run: `pnpm install && pnpm test && pnpm typecheck`
-Expected: todos os testes passam e o TypeScript não relata erros.
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add package.json pnpm-workspace.yaml tsconfig.base.json .editorconfig .gitignore .env.example scripts/verify-env.mjs test/verify-env.test.ts pnpm-lock.yaml
-git commit -m "chore: initialize automation workspace"
+git add package.json pnpm-workspace.yaml tsconfig.base.json .editorconfig .gitignore .env.example scripts test docs/architecture/DEPENDENCIES.md
+git commit -m "chore: create CMAC portal workspace"
 ```
 
-### Task 2: Contratos internos e portas de integração
+### Task 2: Shared Contracts, Database, and Demo Boundary
 
 **Files:**
-- Create: `apps/core/package.json`
-- Create: `apps/core/tsconfig.json`
-- Create: `apps/core/src/domain/contracts.ts`
-- Create: `apps/core/src/ports/soul-mv.ts`
-- Create: `apps/core/src/ports/messaging.ts`
-- Test: `apps/core/test/contracts.test.ts`
-
-**Interfaces:**
-- Produces: `SoulMvPort`, `MessagingPort`, `PatientRef`, `ServiceOffering`, `AvailabilitySlot`, `Appointment`, `PreparationInstruction`.
-
-- [ ] **Step 1: Escrever testes de contrato Zod**
-
-```ts
-it('rejects clinical advice and accepts administrative catalog entries', () => {
-  expect(ServiceOfferingSchema.parse({ id:'cardio-first', name:'Consulta inicial de cardiologia', kind:'consultation', unitIds:['u1'] }).kind).toBe('consultation');
-  expect(() => ServiceOfferingSchema.parse({ id:'x', name:'Você tem arritmia', kind:'diagnosis', unitIds:['u1'] })).toThrow();
-});
-```
-
-- [ ] **Step 2: Confirmar falha**
-
-Run: `pnpm --filter @clinica/core test -- contracts.test.ts`
-Expected: FAIL por módulos inexistentes.
-
-- [ ] **Step 3: Definir tipos e assinaturas**
-
-```ts
-export interface SoulMvPort {
-  findPatient(input: PatientLookup): Promise<PatientRef | null>;
-  listServices(input: ServiceQuery): Promise<ServiceOffering[]>;
-  listAvailability(input: AvailabilityQuery): Promise<AvailabilitySlot[]>;
-  createAppointment(input: CreateAppointmentCommand): Promise<Appointment>;
-  cancelAppointment(input: CancelAppointmentCommand): Promise<Appointment>;
-  rescheduleAppointment(input: RescheduleAppointmentCommand): Promise<Appointment>;
-  getPreparation(serviceId: string): Promise<PreparationInstruction[]>;
-}
-```
-
-Definir IDs opacos, datas ISO-8601 com timezone, enum de status e schemas Zod correspondentes. `MessagingPort.send()` recebe `MessageCommand` e retorna `MessageReceipt`.
-
-- [ ] **Step 4: Rodar testes e tipos**
-
-Run: `pnpm --filter @clinica/core test && pnpm --filter @clinica/core typecheck`
-Expected: PASS.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add apps/core
-git commit -m "feat: define integration contracts"
-```
-
-### Task 3: Banco, idempotência e auditoria sanitizada
-
-**Files:**
-- Create: `apps/core/src/db/schema.ts`
-- Create: `apps/core/src/db/client.ts`
-- Create: `apps/core/src/db/migrations/0001_initial.sql`
-- Create: `apps/core/src/modules/idempotency/service.ts`
-- Create: `apps/core/src/modules/audit/service.ts`
-- Test: `apps/core/test/integration/idempotency.test.ts`
-- Test: `apps/core/test/audit.test.ts`
-
-**Interfaces:**
-- Consumes: contratos da Task 2.
-- Produces: `IdempotencyService.execute<T>(key, operation, fn)` e `AuditService.record(event)`.
-
-- [ ] **Step 1: Testar repetição e mascaramento**
-
-```ts
-it('executes the same mutation once', async () => {
-  let calls = 0;
-  const first = await service.execute('evt-1','appointment.create',async()=>({ id:`a-${++calls}` }));
-  const second = await service.execute('evt-1','appointment.create',async()=>({ id:`a-${++calls}` }));
-  expect(second).toEqual(first); expect(calls).toBe(1);
-});
-
-it('masks protected fields', () => {
-  expect(sanitize({ cpf:'12345678901', phone:'41999998888', token:'secret' }))
-    .toEqual({ cpf:'***8901', phone:'***8888', token:'[REDACTED]' });
-});
-```
-
-- [ ] **Step 2: Confirmar falha com PostgreSQL de teste**
-
-Run: `docker compose -f infra/compose/test.yml up -d postgres && pnpm --filter @clinica/core test -- idempotency.test.ts audit.test.ts`
-Expected: FAIL por schema e serviços inexistentes.
-
-- [ ] **Step 3: Implementar migração e serviços**
-
-Criar tabelas `journeys`, `idempotency_keys`, `appointments`, `waitlist_entries`, `message_deliveries`, `consents` e `audit_events`. Usar índice único `(key, operation)`, transação e armazenamento do resultado JSON. Sanitizar `cpf`, `phone`, `email`, `token`, `authorization` e `messageBody` antes de persistir auditoria.
-
-- [ ] **Step 4: Validar concorrência**
-
-Run: `pnpm --filter @clinica/core test -- idempotency.test.ts audit.test.ts`
-Expected: PASS inclusive com dez chamadas concorrentes para a mesma chave.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add apps/core/src/db apps/core/src/modules/idempotency apps/core/src/modules/audit apps/core/test
-git commit -m "feat: add persistence idempotency and audit"
-```
-
-### Task 4: Adaptador Soul MV sintético e servidor de cenários
-
-**Files:**
-- Create: `apps/core/src/adapters/soul-mv-mock/index.ts`
-- Create: `apps/core/src/adapters/soul-mv-mock/fixtures.ts`
-- Create: `apps/mv-mock/package.json`
-- Create: `apps/mv-mock/src/server.ts`
-- Create: `apps/mv-mock/src/scenarios.ts`
-- Test: `apps/core/test/contract/soul-mv-adapter.contract.ts`
-
-**Interfaces:**
-- Consumes: `SoulMvPort`.
-- Produces: `createSoulMvMockAdapter(seed)` e HTTP mock com `X-Mock-Scenario: success|conflict|timeout|rate-limit|unauthorized`.
-
-- [ ] **Step 1: Escrever suíte contratual reutilizável**
-
-```ts
-export function soulMvContract(make: () => SoulMvPort) {
-  it('lists slots and prevents double booking', async () => {
-    const api = make();
-    const [slot] = await api.listAvailability({ serviceId:'cardio-first', unitId:'u1', from:'2026-11-01', to:'2026-11-30' });
-    await api.createAppointment({ idempotencyKey:'k1', patientId:'p1', slotId:slot.id });
-    await expect(api.createAppointment({ idempotencyKey:'k2', patientId:'p2', slotId:slot.id })).rejects.toMatchObject({ code:'SLOT_UNAVAILABLE' });
-  });
-}
-```
-
-- [ ] **Step 2: Confirmar falha**
-
-Run: `pnpm --filter @clinica/core test -- soul-mv-adapter.contract.ts`
-Expected: FAIL por adaptador inexistente.
-
-- [ ] **Step 3: Implementar fixtures e cenários**
-
-Incluir duas unidades, oito especialidades, doze profissionais, consultas iniciais/retornos, cinco exames, preparos sintéticos e trinta dias de horários. O mock deve aceitar clock injetável, reproduzir cenários por header e nunca conter nomes/CPFs reais.
-
-- [ ] **Step 4: Executar contrato e smoke HTTP**
-
-Run: `pnpm --filter @clinica/core test -- soul-mv-adapter.contract.ts && pnpm --filter @clinica/mv-mock test`
-Expected: PASS para sucesso, conflito, timeout, limite e não autorizado.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add apps/core/src/adapters/soul-mv-mock apps/core/test/contract apps/mv-mock
-git commit -m "feat: add contractual Soul MV simulator"
-```
-
-### Task 5: API Integration Core e autenticação interna
-
-**Files:**
-- Create: `apps/core/src/config.ts`
-- Create: `apps/core/src/app.ts`
-- Create: `apps/core/src/server.ts`
-- Create: `apps/core/src/http/auth.ts`
-- Create: `apps/core/src/http/errors.ts`
-- Create: `apps/core/src/http/routes/catalog.ts`
-- Create: `apps/core/src/http/routes/appointments.ts`
-- Create: `apps/core/src/http/routes/health.ts`
-- Test: `apps/core/test/http/app.test.ts`
-
-**Interfaces:**
-- Produces: REST `/v1/catalog/services`, `/v1/availability`, `/v1/appointments`, `/v1/appointments/:id/cancel`, `/v1/appointments/:id/reschedule`, `/health/live`, `/health/ready`.
-
-- [ ] **Step 1: Testar autenticação e mutação idempotente**
-
-```ts
-it('requires API key and idempotency key', async () => {
-  expect((await app.inject({ method:'GET', url:'/v1/catalog/services' })).statusCode).toBe(401);
-  expect((await app.inject({ method:'POST', url:'/v1/appointments', headers:{'x-internal-api-key':key}, payload:{} })).statusCode).toBe(400);
-});
-```
-
-- [ ] **Step 2: Confirmar falha**
-
-Run: `pnpm --filter @clinica/core test -- app.test.ts`
-Expected: FAIL por `buildApp` inexistente.
-
-- [ ] **Step 3: Implementar rotas e envelope de erro**
-
-```json
-{ "error": { "code": "SLOT_UNAVAILABLE", "message": "Horário indisponível", "retryable": false, "correlationId": "req-123" } }
-```
-
-Validar todos os payloads com Zod, exigir `X-Internal-Api-Key` e `Idempotency-Key` nas mutações, mapear timeout/429/401/409 e registrar auditoria sanitizada.
-
-- [ ] **Step 4: Executar testes HTTP**
-
-Run: `pnpm --filter @clinica/core test -- app.test.ts`
-Expected: PASS para autenticação, validação, criação, repetição, conflito e healthchecks.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add apps/core/src/config.ts apps/core/src/app.ts apps/core/src/server.ts apps/core/src/http apps/core/test/http
-git commit -m "feat: expose secured integration API"
-```
-
-### Task 6: Orientação administrativa e conteúdo aprovado
-
-**Files:**
-- Create: `content/catalog/services.pt-BR.json`
-- Create: `content/messages/templates.pt-BR.json`
-- Create: `apps/core/src/modules/catalog/service.ts`
-- Create: `apps/core/src/modules/catalog/safety.ts`
-- Test: `apps/core/test/catalog.test.ts`
-
-**Interfaces:**
-- Produces: `CatalogService.search(query, filters)` e `classifyAdministrativeIntent(text)` com `confidence`, `intent`, `entities`, `requiresHuman`.
-
-- [ ] **Step 1: Testar busca e limite clínico**
-
-```ts
-it.each(['estou com dor no peito','qual remédio devo tomar','isso é câncer?'])('routes clinical text to safety: %s', async text => {
-  expect((await classifyAdministrativeIntent(text)).requiresHuman).toBe(true);
-});
-it('explains a consultation administratively', async () => {
-  expect((await catalog.search('consulta cardiologia primeira vez',{}))[0].id).toBe('cardio-first');
-});
-```
-
-- [ ] **Step 2: Confirmar falha**
-
-Run: `pnpm --filter @clinica/core test -- catalog.test.ts`
-Expected: FAIL por catálogo inexistente.
-
-- [ ] **Step 3: Implementar menus determinísticos e catálogo**
-
-Cada item deve conter `id`, `displayName`, `kind`, `description`, `unitIds`, `documentRequirements`, `acceptedPlanIds`, `searchTerms` e `clinicalDisclaimer`. Conteúdo de preparo fica marcado `approvalStatus: "synthetic-demo"` e não pode ser habilitado em produção sem `approvedBy` e `approvedAt`.
-
-- [ ] **Step 4: Validar conteúdo**
-
-Run: `pnpm --filter @clinica/core test -- catalog.test.ts`
-Expected: PASS, incluindo rejeição de diagnóstico e recomendação terapêutica.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add content apps/core/src/modules/catalog apps/core/test/catalog.test.ts
-git commit -m "feat: add safe administrative guidance catalog"
-```
-
-### Task 7: Agendamento, cancelamento, reagendamento e lista de espera
-
-**Files:**
-- Create: `apps/core/src/modules/appointments/service.ts`
-- Create: `apps/core/src/modules/appointments/locks.ts`
-- Create: `apps/core/src/modules/waitlist/service.ts`
-- Test: `apps/core/test/appointments.test.ts`
-- Test: `apps/core/test/waitlist.test.ts`
-
-**Interfaces:**
-- Produces: `AppointmentService.book/cancel/reschedule` e `WaitlistService.offerNext/acceptOffer/expireOffer`.
-
-- [ ] **Step 1: Testar ciclo completo e concorrência**
-
-```ts
-it('keeps the old appointment when replacement fails', async () => {
-  const old = await service.book(command('slot-1','k1'));
-  await expect(service.reschedule({ appointmentId:old.id, slotId:'occupied', idempotencyKey:'k2' })).rejects.toMatchObject({ code:'SLOT_UNAVAILABLE' });
-  expect((await repo.get(old.id))?.status).toBe('confirmed');
-});
-```
-
-- [ ] **Step 2: Confirmar falha**
-
-Run: `pnpm --filter @clinica/core test -- appointments.test.ts waitlist.test.ts`
-Expected: FAIL por serviços inexistentes.
-
-- [ ] **Step 3: Implementar locks e estados**
-
-Usar lock Redis `slot:{slotId}` com token e expiração de 30 segundos. Estados da oferta: `queued`, `offered`, `accepted`, `expired`, `closed`; índice único impede duas aceitações para a mesma vaga. Reagendamento preserva a marcação anterior até confirmação da nova.
-
-- [ ] **Step 4: Executar testes concorrentes**
-
-Run: `pnpm --filter @clinica/core test -- appointments.test.ts waitlist.test.ts`
-Expected: PASS com vinte aceitações simultâneas e apenas uma vencedora.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add apps/core/src/modules/appointments apps/core/src/modules/waitlist apps/core/test/appointments.test.ts apps/core/test/waitlist.test.ts
-git commit -m "feat: automate appointment lifecycle"
-```
-
-### Task 8: Cadências de mensagens e adaptador Chatwoot
-
-**Files:**
-- Create: `apps/core/src/modules/messages/service.ts`
-- Create: `apps/core/src/modules/messages/schedule.ts`
-- Create: `apps/core/src/adapters/chatwoot/client.ts`
-- Create: `apps/core/src/modules/handoff/service.ts`
-- Test: `apps/core/test/messages.test.ts`
-- Test: `apps/core/test/chatwoot.test.ts`
-
-**Interfaces:**
-- Produces: `MessageScheduleService.plan/cancelObsolete`, `ChatwootClient.sendMessage`, `HandoffService.transfer`.
-
-- [ ] **Step 1: Testar cadência e encerramento**
-
-```ts
-it('cancels old reminders after reschedule', async () => {
-  await scheduler.plan(appointment('a1','2026-11-20T10:00:00-03:00'));
-  await scheduler.cancelObsolete('a1','rescheduled');
-  expect(await repo.pendingFor('a1')).toEqual([]);
-});
-```
-
-- [ ] **Step 2: Confirmar falha**
-
-Run: `pnpm --filter @clinica/core test -- messages.test.ts chatwoot.test.ts`
-Expected: FAIL por serviços inexistentes.
-
-- [ ] **Step 3: Implementar D-7/D-2/D-1/dia e handoff**
-
-Persistir cada entrega com chave `appointmentId:templateId:scheduledAt`. `transfer()` adiciona rótulo `automation_handoff`, atribui ao time configurado e publica nota privada com intenção, etapa, dados validados e correlation ID; nunca inclui CPF completo ou token.
-
-- [ ] **Step 4: Validar com servidor HTTP simulado**
-
-Run: `pnpm --filter @clinica/core test -- messages.test.ts chatwoot.test.ts`
-Expected: PASS para envio, deduplicação, cancelamento de cadência, erro 429 e handoff sanitizado.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add apps/core/src/modules/messages apps/core/src/adapters/chatwoot apps/core/src/modules/handoff apps/core/test/messages.test.ts apps/core/test/chatwoot.test.ts
-git commit -m "feat: add messaging cadence and human fallback"
-```
-
-### Task 9: Workflows n8n importáveis
-
-**Files:**
-- Create: `workflows/n8n/manifest.json`
-- Create: `workflows/n8n/01-chatwoot-ingress.json`
-- Create: `workflows/n8n/02-intent-router.json`
-- Create: `workflows/n8n/03-guidance-and-booking.json`
-- Create: `workflows/n8n/04-cancel-reschedule.json`
-- Create: `workflows/n8n/05-reminders-preparation.json`
-- Create: `workflows/n8n/06-waitlist.json`
-- Create: `workflows/n8n/07-post-visit.json`
-- Create: `workflows/n8n/08-error-handler.json`
-- Create: `scripts/validate-workflows.mjs`
-- Test: `test/workflows.test.ts`
-
-**Interfaces:**
-- Consumes: REST da Task 5 e Chatwoot webhooks.
-- Produces: oito workflows com IDs estáveis, sem credenciais embutidas.
-
-- [ ] **Step 1: Testar os invariantes dos JSONs**
-
-```ts
-it('contains no secret and every HTTP mutation sends idempotency', async () => {
-  for (const flow of loadWorkflows()) {
-    expect(JSON.stringify(flow)).not.toMatch(/Bearer\s+|api[_-]?key\s*[:=]\s*[A-Za-z0-9]{16}/i);
-    for (const node of mutationNodes(flow)) expect(node.parameters.headerParameters).toContainEqual(expect.objectContaining({ name:'Idempotency-Key' }));
-  }
-});
-```
-
-- [ ] **Step 2: Confirmar falha**
-
-Run: `pnpm exec vitest run test/workflows.test.ts`
-Expected: FAIL porque os oito JSONs não existem.
-
-- [ ] **Step 3: Criar workflows completos**
-
-Cada JSON deve usar Webhook/Schedule Trigger, Set para normalização, Switch para roteamento, HTTP Request apontando para `{{$env.CORE_BASE_URL}}`, Wait quando necessário, e Error Trigger central. Usar `{{$json.event_id}}:{{$json.action}}` como chave de idempotência e credencial do tipo Header Auth referenciada por nome, nunca valor.
-
-- [ ] **Step 4: Importar em n8n efêmero e validar**
-
-Run: `docker compose -f infra/compose/dev.yml run --rm n8n n8n import:workflow --separate --input=/workflows/n8n && node scripts/validate-workflows.mjs`
-Expected: oito imports bem-sucedidos, zero segredo e todas as referências resolvidas.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add workflows/n8n scripts/validate-workflows.mjs test/workflows.test.ts
-git commit -m "feat: add importable n8n patient journeys"
-```
-
-### Task 10: Stack Docker, Chatwoot e bootstrap reproduzível
-
-**Files:**
-- Create: `infra/compose/dev.yml`
-- Create: `infra/compose/prod.yml`
+- Create: `packages/contracts/package.json`
+- Create: `packages/contracts/src/environment.ts`
+- Create: `packages/contracts/src/catalog.ts`
+- Create: `packages/contracts/src/appointments.ts`
+- Create: `packages/contracts/src/protocols.ts`
+- Create: `apps/api/package.json`
+- Create: `apps/api/src/config.ts`
+- Create: `apps/api/src/db/schema.ts`
+- Create: `apps/api/src/db/client.ts`
+- Create: `apps/api/drizzle.config.ts`
+- Create: `apps/api/test/schema.test.ts`
 - Create: `infra/compose/test.yml`
-- Create: `infra/caddy/Caddyfile`
-- Create: `apps/core/Dockerfile`
-- Create: `apps/mv-mock/Dockerfile`
-- Create: `scripts/bootstrap.ps1`
-- Create: `scripts/bootstrap.sh`
-- Create: `scripts/import-n8n.ps1`
-- Create: `scripts/create-chatwoot-inbox.mjs`
-- Test: `scripts/smoke-stack.mjs`
 
 **Interfaces:**
-- Produces: stack com `core`, `mv-mock`, `postgres`, `redis`, `n8n`, `chatwoot-web`, `chatwoot-worker`, `caddy`, `prometheus`, `grafana`.
+- Consumes: `validateEnv(input): AppEnvironment`.
+- Produces: Zod schemas `CatalogItemSchema`, `SlotSchema`, `AppointmentSchema`, `OperationProtocolSchema`; database tables for accounts, sessions, idempotency, appointments, protocols, support requests, and audit events.
 
-- [ ] **Step 1: Escrever smoke test**
-
-```js
-const checks = [
-  ['core','http://localhost:3001/health/ready'],
-  ['n8n','http://localhost:5678/healthz'],
-  ['chatwoot','http://localhost:3000/api'],
-  ['mv-mock','http://localhost:3010/health']
-];
-for (const [name,url] of checks) if (!(await fetch(url)).ok) throw new Error(`${name} unhealthy`);
-```
-
-- [ ] **Step 2: Confirmar falha**
-
-Run: `node scripts/smoke-stack.mjs`
-Expected: FAIL porque o stack não existe.
-
-- [ ] **Step 3: Criar Compose e bootstrap**
-
-Fixar n8n `2.44.5`, Chatwoot `v4.17.1`, PostgreSQL `16.10-alpine`, Redis `7.4.5-alpine` e Caddy `2.9.1-alpine`. Healthchecks bloqueiam dependentes; volumes têm nomes explícitos; apenas Caddy publica portas em produção. O bootstrap valida `.env`, aplica migrações, cria conta/inbox do widget, importa workflows e imprime URLs locais.
-
-- [ ] **Step 4: Subir ambiente limpo e executar smoke**
-
-Run: `docker compose -f infra/compose/dev.yml up -d --build && node scripts/smoke-stack.mjs`
-Expected: todos os serviços saudáveis e oito workflows importados.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add infra apps/core/Dockerfile apps/mv-mock/Dockerfile scripts
-git commit -m "feat: add reproducible clinic automation stack"
-```
-
-### Task 11: Observabilidade, backup e segurança operacional
-
-**Files:**
-- Create: `infra/observability/prometheus.yml`
-- Create: `infra/observability/alerts.yml`
-- Create: `infra/observability/grafana/provisioning/datasources.yml`
-- Create: `infra/observability/grafana/provisioning/dashboards.yml`
-- Create: `infra/observability/grafana/dashboards/clinic-automation.json`
-- Create: `scripts/backup.ps1`
-- Create: `scripts/restore.ps1`
-- Create: `scripts/scan-secrets.mjs`
-- Test: `test/operations.test.ts`
-
-**Interfaces:**
-- Produces: métricas `journey_started_total`, `journey_completed_total`, `handoff_total`, `integration_errors_total`, `appointment_operations_total`, histogramas de latência e backup restaurável.
-
-- [ ] **Step 1: Testar painel, alertas e scanner**
+- [ ] **Step 1: Write the failing contract and schema tests**
 
 ```ts
-it('defines operational alerts and contains no secrets', () => {
-  expect(read('infra/observability/alerts.yml')).toContain('IntegrationErrorRateHigh');
-  expect(scanRepository()).toEqual([]);
+it('rejects a confirmed appointment without an external confirmation reference', () => {
+  expect(() => AppointmentSchema.parse({
+    id: crypto.randomUUID(),
+    patientId: crypto.randomUUID(),
+    slotId: 'slot-1',
+    status: 'confirmed',
+  })).toThrow();
+});
+
+it('keeps idempotency keys unique per patient and operation', async () => {
+  await insertIdempotency({ patientId: patientA, operation: 'book', key: 'same' });
+  await expect(insertIdempotency({ patientId: patientA, operation: 'book', key: 'same' }))
+    .rejects.toThrow();
 });
 ```
 
-- [ ] **Step 2: Confirmar falha**
+- [ ] **Step 2: Run the tests and observe failure**
 
-Run: `pnpm exec vitest run test/operations.test.ts`
-Expected: FAIL por artefatos ausentes.
+Run: `pnpm --filter @cmac/api test -- schema.test.ts`
+Expected: FAIL because contracts and database schema do not exist.
 
-- [ ] **Step 3: Implementar métricas e operação**
+- [ ] **Step 3: Implement contracts and migrations**
 
-Alertar se taxa de erro externo superar 5% por 10 minutos, readiness ficar indisponível por 2 minutos ou dead-letter crescer. Backup usa `pg_dump --format=custom`, checksum SHA-256 e diretório datado; restore exige banco de destino explícito e nunca sobrescreve o banco padrão.
+Use discriminated unions so `confirmed` requires `externalReference` and `confirmedAt`; `uncertain` requires `correlationId`. Add foreign keys, timestamps, revocation fields, unique idempotency indexes, and patient ownership indexes. Store only opaque integration references.
 
-- [ ] **Step 4: Ensaiar restauração**
+- [ ] **Step 4: Run migration and tests against PostgreSQL**
 
-Run: `pwsh scripts/backup.ps1 -OutputDirectory .artifacts/backups; pwsh scripts/restore.ps1 -BackupFile .artifacts/backups/latest.dump -TargetDatabase clinic_restore_test; pnpm test`
-Expected: checksum válido, restore em banco isolado e suíte verde.
+Run: `docker compose -f infra/compose/test.yml up -d postgres && pnpm --filter @cmac/api db:migrate && pnpm --filter @cmac/api test -- schema.test.ts`
+Expected: migration succeeds and tests pass.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add infra/observability scripts/backup.ps1 scripts/restore.ps1 scripts/scan-secrets.mjs test/operations.test.ts
-git commit -m "feat: add observability and recoverability"
+git add packages/contracts apps/api infra/compose/test.yml
+git commit -m "feat: add contracts and persistence foundation"
 ```
 
-### Task 12: Jornada ponta a ponta e documentação de entrega
+### Task 3: Secure Account, Session, and Recovery Flows
 
 **Files:**
-- Create: `test/e2e/patient-journey.test.ts`
-- Create: `test/e2e/failure-journey.test.ts`
+- Create: `apps/api/src/auth/password.ts`
+- Create: `apps/api/src/auth/service.ts`
+- Create: `apps/api/src/auth/repository.ts`
+- Create: `apps/api/src/auth/routes.ts`
+- Create: `apps/api/src/auth/verification-port.ts`
+- Create: `apps/api/src/auth/demo-verification-adapter.ts`
+- Create: `apps/api/src/auth/authorize-patient.ts`
+- Create: `apps/api/test/auth.test.ts`
+- Create: `apps/api/test/authorization.test.ts`
+
+**Interfaces:**
+- Produces: `AuthService.register`, `verifyContact`, `signIn`, `signOut`, `startRecovery`, `completeRecovery`; `requirePatient(request): PatientPrincipal`.
+
+- [ ] **Step 1: Write failing isolation and recovery tests**
+
+```ts
+it('does not authenticate with CPF alone', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/auth/sign-in',
+    payload: { cpf: '52998224725' },
+  });
+  expect(response.statusCode).toBe(400);
+});
+
+it('denies patient A access to patient B resources', async () => {
+  const response = await asPatient(patientA).get(`/v1/patients/${patientB.id}/profile`);
+  expect(response.statusCode).toBe(403);
+});
+```
+
+- [ ] **Step 2: Run tests and observe failure**
+
+Run: `pnpm --filter @cmac/api test -- auth.test.ts authorization.test.ts`
+Expected: FAIL because authentication routes and authorization guard do not exist.
+
+- [ ] **Step 3: Implement minimal secure identity flow**
+
+Hash passwords with Argon2id using recorded parameters. Store only hashed one-time verification codes, enforce expiry and attempt limits, rotate the session identifier after sign-in, persist revocable sessions, and set `HttpOnly`, `Secure` outside local development, and `SameSite=Lax` cookies. Return neutral recovery responses to prevent account enumeration.
+
+- [ ] **Step 4: Verify auth and abuse controls**
+
+Run: `pnpm --filter @cmac/api test -- auth.test.ts authorization.test.ts`
+Expected: registration, verification, sign-in, sign-out, recovery, expiry, attempt limits, session rotation, and cross-patient denial pass.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/api/src/auth apps/api/test/auth.test.ts apps/api/test/authorization.test.ts
+git commit -m "feat: add secure patient identity"
+```
+
+### Task 4: SOUL MV Port, Synthetic Catalog, and Contract Tests
+
+**Files:**
+- Create: `apps/api/src/integrations/soul-mv/port.ts`
+- Create: `apps/api/src/integrations/soul-mv/demo-adapter.ts`
+- Create: `apps/api/src/integrations/soul-mv/http-adapter.ts`
+- Create: `apps/api/src/integrations/soul-mv/select-adapter.ts`
+- Create: `apps/api/src/catalog/service.ts`
+- Create: `apps/api/src/catalog/routes.ts`
+- Create: `apps/api/test/soul-mv-contract.ts`
+- Create: `apps/api/test/catalog.test.ts`
+- Create: `apps/api/fixtures/demo-catalog.ts`
+
+**Interfaces:**
+- Produces: `SoulMvPort.listSpecialties`, `listProfessionals`, `listLocations`, `listSlots`, `holdSlot`, `confirmBooking`, `getOperationStatus`, `cancelAppointment`, `rescheduleAppointment`; public read-only catalog routes.
+
+- [ ] **Step 1: Write the failing shared adapter contract**
+
+```ts
+export function soulMvContract(createAdapter: () => SoulMvPort) {
+  it('returns only schema-valid synthetic slots in demo mode', async () => {
+    const slots = await createAdapter().listSlots({ specialtyId: 'cardiology' });
+    expect(slots.length).toBeGreaterThan(0);
+    slots.forEach(slot => expect(SlotSchema.parse(slot).isSynthetic).toBe(true));
+  });
+}
+```
+
+- [ ] **Step 2: Run and observe failure**
+
+Run: `pnpm --filter @cmac/api test -- soul-mv-contract.ts catalog.test.ts`
+Expected: FAIL because `SoulMvPort` and the adapters do not exist.
+
+- [ ] **Step 3: Implement the port and demo adapter**
+
+Use deterministic synthetic specialties, professionals, the CMAC display name, and fictional schedules. Validate all adapter outputs through shared schemas. The HTTP adapter constructor must throw `RealAdapterUnavailableError` unless homologation configuration is complete; it contains no guessed paths or payloads.
+
+- [ ] **Step 4: Verify demo labeling and HTTP-adapter lockout**
+
+Run: `pnpm --filter @cmac/api test -- soul-mv-contract.ts catalog.test.ts`
+Expected: catalog results are synthetic and valid; an incomplete real-adapter configuration cannot start.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/api/src/integrations apps/api/src/catalog apps/api/test apps/api/fixtures
+git commit -m "feat: add synthetic SOUL MV boundary"
+```
+
+### Task 5: Idempotent Booking, Concurrency, and Reconciliation
+
+**Files:**
+- Create: `apps/api/src/appointments/service.ts`
+- Create: `apps/api/src/appointments/repository.ts`
+- Create: `apps/api/src/appointments/routes.ts`
+- Create: `apps/api/src/appointments/idempotency.ts`
+- Create: `apps/api/src/protocols/service.ts`
+- Create: `apps/api/src/audit/service.ts`
+- Create: `apps/api/test/booking.test.ts`
+- Create: `apps/api/test/booking-concurrency.test.ts`
+- Create: `apps/api/test/reconciliation.test.ts`
+
+**Interfaces:**
+- Consumes: `SoulMvPort`, `requirePatient`, shared appointment schemas.
+- Produces: `AppointmentService.hold`, `book`, `getOwnAppointments`, `reconcile`; routes `POST /v1/appointment-holds`, `POST /v1/appointments`, `GET /v1/appointments`.
+
+- [ ] **Step 1: Write failing repeated-click and concurrency tests**
+
+```ts
+it('returns the same confirmed booking for repeated idempotency keys', async () => {
+  const first = await service.book(patient, request, 'book-123');
+  const repeated = await service.book(patient, request, 'book-123');
+  expect(repeated.appointment.id).toBe(first.appointment.id);
+  expect(adapter.confirmBookingCalls).toBe(1);
+});
+
+it('allows only one patient to confirm the same slot', async () => {
+  const results = await Promise.allSettled(
+    patients.map((patient, index) => service.book(patient, request, `book-${index}`)),
+  );
+  expect(results.filter(result => result.status === 'fulfilled')).toHaveLength(1);
+});
+```
+
+- [ ] **Step 2: Run and observe failure**
+
+Run: `pnpm --filter @cmac/api test -- booking.test.ts booking-concurrency.test.ts reconciliation.test.ts`
+Expected: FAIL because booking services do not exist.
+
+- [ ] **Step 3: Implement transactional booking**
+
+Persist the idempotency record before invoking the adapter, serialize claims for the same slot with a database advisory lock or unique claim, and produce a protocol only after external confirmation. On timeout after mutation, save `uncertain`; call `getOperationStatus(correlationId)` before any retry. Sanitize audit metadata.
+
+- [ ] **Step 4: Verify success, conflict, timeout, and reconciliation**
+
+Run: `pnpm --filter @cmac/api test -- booking.test.ts booking-concurrency.test.ts reconciliation.test.ts`
+Expected: one external mutation per idempotency key, one winner per slot, no false timeout confirmation, and a reconciled result with the original correlation ID.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/api/src/appointments apps/api/src/protocols apps/api/src/audit apps/api/test
+git commit -m "feat: implement safe appointment booking"
+```
+
+### Task 6: Cancellation and Safe Rescheduling
+
+**Files:**
+- Modify: `apps/api/src/appointments/service.ts`
+- Modify: `apps/api/src/appointments/routes.ts`
+- Create: `apps/api/src/appointments/policy.ts`
+- Create: `apps/api/test/cancellation.test.ts`
+- Create: `apps/api/test/rescheduling.test.ts`
+
+**Interfaces:**
+- Produces: `AppointmentService.cancel`, `reschedule`; routes `POST /v1/appointments/:id/cancel`, `POST /v1/appointments/:id/reschedule`.
+
+- [ ] **Step 1: Write failing ownership and preservation tests**
+
+```ts
+it('does not cancel an appointment owned by another patient', async () => {
+  await expect(service.cancel(patientA, patientBAppointment.id, 'cancel-1'))
+    .rejects.toMatchObject({ code: 'FORBIDDEN' });
+});
+
+it('preserves the original appointment when the replacement slot fails', async () => {
+  adapter.failNextRescheduleWithConflict();
+  await expect(service.reschedule(patient, original.id, newSlot.id, 'move-1')).rejects.toThrow();
+  expect((await repository.get(original.id))?.status).toBe('confirmed');
+});
+```
+
+- [ ] **Step 2: Run and observe failure**
+
+Run: `pnpm --filter @cmac/api test -- cancellation.test.ts rescheduling.test.ts`
+Expected: FAIL because policy, cancellation, and rescheduling behavior do not exist.
+
+- [ ] **Step 3: Implement configurable policy and mutations**
+
+Model rules as server-side configuration with an explicit “institutional validation pending” demo policy. Recheck ownership and state inside the transaction. Create protocols only after confirmation. Use adapter-supported atomic rescheduling when available; otherwise hold and confirm the replacement before canceling the original, and record compensation requirements on partial failure.
+
+- [ ] **Step 4: Verify policy, idempotency, preservation, and uncertainty**
+
+Run: `pnpm --filter @cmac/api test -- cancellation.test.ts rescheduling.test.ts`
+Expected: unauthorized access is denied, repeated mutations deduplicate, policy violations explain the reason, and the original booking survives replacement failure.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/api/src/appointments apps/api/test/cancellation.test.ts apps/api/test/rescheduling.test.ts
+git commit -m "feat: add safe appointment management"
+```
+
+### Task 7: Accessible Web Shell and Authentication Experience
+
+**Files:**
+- Create: `apps/web/package.json`
+- Create: `apps/web/src/app/layout.tsx`
+- Create: `apps/web/src/app/globals.css`
+- Create: `apps/web/src/app/(public)/entrar/page.tsx`
+- Create: `apps/web/src/app/(public)/cadastro/page.tsx`
+- Create: `apps/web/src/app/(public)/recuperar-acesso/page.tsx`
+- Create: `apps/web/src/app/(portal)/layout.tsx`
+- Create: `apps/web/src/components/demo-banner.tsx`
+- Create: `apps/web/src/components/form-field.tsx`
+- Create: `apps/web/src/components/status-message.tsx`
+- Create: `apps/web/src/lib/api/client.ts`
+- Create: `apps/web/test/auth-pages.test.tsx`
+- Create: `apps/web/test/accessibility.test.tsx`
+
+**Interfaces:**
+- Consumes: auth API and environment mode.
+- Produces: accessible portal shell, sign-in, registration, verification, recovery, session-expired recovery, and persistent demo banner.
+
+- [ ] **Step 1: Write failing accessible interaction tests**
+
+```tsx
+it('focuses the error summary and links errors to fields', async () => {
+  render(<RegisterPage />);
+  await user.click(screen.getByRole('button', { name: /criar acesso/i }));
+  const summary = await screen.findByRole('alert');
+  expect(summary).toHaveFocus();
+  expect(screen.getByLabelText(/e-mail/i)).toHaveAccessibleDescription();
+});
+```
+
+- [ ] **Step 2: Run and observe failure**
+
+Run: `pnpm --filter @cmac/web test -- auth-pages.test.tsx accessibility.test.tsx`
+Expected: FAIL because the web app and components do not exist.
+
+- [ ] **Step 3: Implement the branded shell and auth states**
+
+Extract only verified brand tokens into CSS custom properties and record their manual URLs in comments. Use a replaceable text lockup until asset authorization is documented. Follow the attached reference’s compact mobile hierarchy and rounded action cards without copying HELP assets. Implement loading, validation, server error, unavailable, success, and expired-session states.
+
+- [ ] **Step 4: Verify components and production build**
+
+Run: `pnpm --filter @cmac/web test && pnpm --filter @cmac/web build`
+Expected: interaction and axe checks pass, and the production build exits 0.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/web
+git commit -m "feat: add accessible CMAC patient shell"
+```
+
+### Task 8: Catalog, Booking Wizard, and Patient Appointments UI
+
+**Files:**
+- Create: `apps/web/src/app/(portal)/inicio/page.tsx`
+- Create: `apps/web/src/app/(portal)/agendar/page.tsx`
+- Create: `apps/web/src/app/(portal)/agendamentos/page.tsx`
+- Create: `apps/web/src/app/(portal)/agendamentos/[id]/page.tsx`
+- Create: `apps/web/src/features/catalog/catalog-browser.tsx`
+- Create: `apps/web/src/features/booking/booking-wizard.tsx`
+- Create: `apps/web/src/features/booking/confirmation-summary.tsx`
+- Create: `apps/web/src/features/appointments/appointment-card.tsx`
+- Create: `apps/web/src/features/appointments/protocol-receipt.tsx`
+- Create: `apps/web/test/booking-wizard.test.tsx`
+- Create: `apps/web/test/appointments.test.tsx`
+
+**Interfaces:**
+- Consumes: catalog, booking, cancellation, rescheduling, and protocol APIs.
+- Produces: end-to-end browser UI for search, explicit confirmation, receipt, own appointments, cancellation, and rescheduling.
+
+- [ ] **Step 1: Write failing wizard and double-submit tests**
+
+```tsx
+it('shows a complete summary and disables confirmation while submitting', async () => {
+  render(<BookingWizard api={api} />);
+  await chooseSpecialtyProfessionalLocationAndSlot(user);
+  expect(screen.getByRole('heading', { name: /revise seu agendamento/i })).toBeVisible();
+  const confirm = screen.getByRole('button', { name: /confirmar agendamento/i });
+  await user.dblClick(confirm);
+  expect(api.book).toHaveBeenCalledTimes(1);
+  expect(confirm).toBeDisabled();
+});
+```
+
+- [ ] **Step 2: Run and observe failure**
+
+Run: `pnpm --filter @cmac/web test -- booking-wizard.test.tsx appointments.test.tsx`
+Expected: FAIL because booking and appointments UI do not exist.
+
+- [ ] **Step 3: Implement all interface states**
+
+Use short, backtrackable steps; preserve non-sensitive selections across recoverable errors; generate one idempotency key per user intent; and distinguish conflict, expired hold, uncertain result, integration outage, empty availability, and confirmed protocol. Require modal or dedicated-page confirmation for cancellation and rescheduling.
+
+- [ ] **Step 4: Verify mobile, keyboard, and error behavior**
+
+Run: `pnpm --filter @cmac/web test -- booking-wizard.test.tsx appointments.test.tsx accessibility.test.tsx`
+Expected: all state tests and axe checks pass without console errors.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/web/src/app apps/web/src/features apps/web/test
+git commit -m "feat: add patient scheduling experience"
+```
+
+### Task 9: Traceable Support and Operational Telemetry
+
+**Files:**
+- Create: `apps/api/src/support/service.ts`
+- Create: `apps/api/src/support/routes.ts`
+- Create: `apps/api/src/telemetry/metrics.ts`
+- Create: `apps/api/src/telemetry/logger.ts`
+- Create: `apps/api/test/support.test.ts`
+- Create: `apps/api/test/log-sanitization.test.ts`
+- Create: `apps/web/src/app/(portal)/suporte/page.tsx`
+- Create: `apps/web/src/features/support/support-request.tsx`
+- Create: `apps/web/test/support.test.tsx`
+
+**Interfaces:**
+- Produces: `SupportService.open`, `listOwn`, `getOwn`; patient support routes; metrics for journey, abandonment, integration errors, deduplication, reconciliation, and handoff.
+
+- [ ] **Step 1: Write failing ownership and sanitization tests**
+
+```ts
+it('does not expose another patient support request', async () => {
+  const response = await asPatient(patientA).get(`/v1/support/${patientBRequest.id}`);
+  expect(response.statusCode).toBe(404);
+});
+
+it('redacts sensitive values from structured logs', () => {
+  logger.info({ cpf: '52998224725', email: 'patient@example.test', token: 'secret' }, 'event');
+  expect(sink.output()).not.toMatch(/52998224725|patient@example\.test|secret/);
+});
+```
+
+- [ ] **Step 2: Run and observe failure**
+
+Run: `pnpm --filter @cmac/api test -- support.test.ts log-sanitization.test.ts && pnpm --filter @cmac/web test -- support.test.tsx`
+Expected: FAIL because support and sanitized telemetry do not exist.
+
+- [ ] **Step 3: Implement patient-visible support and safe metrics**
+
+Generate non-sequential protocols, expose only patient-owned requests, and retain a sanitized status history. Measure counters and histograms with low-cardinality labels. Do not use patient IDs, contact values, free text, appointment IDs, or correlation IDs as metric labels.
+
+- [ ] **Step 4: Verify support and telemetry**
+
+Run: `pnpm --filter @cmac/api test -- support.test.ts log-sanitization.test.ts && pnpm --filter @cmac/web test -- support.test.tsx`
+Expected: ownership, state history, protocol, redaction, and metric-label tests pass.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/api/src/support apps/api/src/telemetry apps/api/test apps/web/src/app apps/web/src/features/support apps/web/test/support.test.tsx
+git commit -m "feat: add traceable patient support"
+```
+
+### Task 10: Full-Stack Composition and End-to-End Acceptance
+
+**Files:**
+- Create: `apps/api/src/app.ts`
+- Create: `apps/api/src/server.ts`
+- Create: `apps/api/Dockerfile`
+- Create: `apps/web/Dockerfile`
+- Create: `infra/compose/dev.yml`
+- Create: `playwright.config.ts`
+- Create: `test/e2e/auth.spec.ts`
+- Create: `test/e2e/booking.spec.ts`
+- Create: `test/e2e/isolation.spec.ts`
+- Create: `test/e2e/failures.spec.ts`
+
+**Interfaces:**
+- Consumes: all API and web modules.
+- Produces: a reproducible demo stack and executable acceptance suite.
+
+- [ ] **Step 1: Write failing E2E acceptance tests**
+
+```ts
+test('patient registers, books, reschedules and cancels with protocols', async ({ page }) => {
+  await registerSyntheticPatient(page);
+  await bookFirstAvailableCardiologySlot(page);
+  await expect(page.getByText(/agendamento confirmado/i)).toBeVisible();
+  await rescheduleToNextAvailableSlot(page);
+  await cancelCurrentAppointment(page);
+  await expect(page.getByText(/protocolo/i)).toBeVisible();
+});
+```
+
+- [ ] **Step 2: Run and observe failure**
+
+Run: `pnpm exec playwright test test/e2e`
+Expected: FAIL because the composed stack is not running.
+
+- [ ] **Step 3: Compose web, API, and PostgreSQL**
+
+Add health and readiness endpoints, migration startup, fixed non-secret demo configuration, service health checks, and isolated named volumes. Publish only required local ports. Seed synthetic data deterministically and show the demo banner on every page.
+
+- [ ] **Step 4: Run complete E2E acceptance**
+
+Run: `docker compose -f infra/compose/dev.yml up -d --build && pnpm exec playwright test test/e2e`
+Expected: registration, recovery, booking, repeated click, cross-patient denial, slot conflict, timeout, reconciliation, cancellation, rescheduling, keyboard navigation, and mobile viewport scenarios pass.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/api/src/app.ts apps/api/src/server.ts apps/api/Dockerfile apps/web/Dockerfile infra/compose/dev.yml playwright.config.ts test/e2e
+git commit -m "test: prove CMAC portal journeys end to end"
+```
+
+### Task 11: Operations, Research Record, and Production Readiness
+
+**Files:**
+- Create: `README.md`
+- Create: `docs/architecture/SOURCES.md`
+- Create: `docs/architecture/DECISIONS.md`
+- Create: `docs/contracts/SOUL-MV-PORT.md`
+- Create: `docs/journeys/FIRST-RELEASE.md`
 - Create: `docs/runbooks/INSTALL.md`
 - Create: `docs/runbooks/OPERATIONS.md`
 - Create: `docs/runbooks/BACKUP-RESTORE.md`
-- Create: `docs/runbooks/INCIDENTS.md`
+- Create: `docs/runbooks/ROLLBACK.md`
 - Create: `docs/runbooks/SOUL-MV-HOMOLOGATION.md`
-- Create: `docs/runbooks/WHATSAPP-ACTIVATION.md`
-- Create: `docs/runbooks/CLINIC-GO-LIVE-CHECKLIST.md`
-- Create: `README.md`
+- Create: `docs/runbooks/PRODUCTION-GATE.md`
+- Create: `scripts/backup.ps1`
+- Create: `scripts/restore.ps1`
+- Create: `scripts/scan-secrets.mjs`
+- Create: `test/operations.test.ts`
 
 **Interfaces:**
-- Consumes: stack e jornadas das Tasks 1–11.
-- Produces: piloto verificável e roteiro exato para ativar APIs reais.
+- Produces: documented facts/requirements/hypotheses, journey rules and acceptance criteria, setup, operations, backup, rollback, and an exact homologation checklist.
 
-- [ ] **Step 1: Escrever E2E do ciclo integral**
+- [ ] **Step 1: Write failing operational artifact tests**
 
 ```ts
-it('guides, books, reminds, reschedules and cancels without an attendant', async () => {
-  const chat = await patient.start('Quero marcar cardiologista');
-  await chat.choose('Consulta inicial de cardiologia');
-  await chat.choose('Unidade 1');
-  const booking = await chat.chooseFirstAvailable();
-  await clock.advanceTo(booking.startAt.minus({ days:2 }));
-  expect(await chat.lastMessage()).toContain('Confirmar');
-  await chat.reply('Reagendar');
-  await chat.chooseSecondAvailable();
-  await chat.reply('Cancelar');
-  expect(await api.appointmentStatus(booking.id)).toBe('cancelled');
-  expect(await chat.handoffCount()).toBe(0);
+it('documents every production dependency and keeps real integration disabled', () => {
+  const gate = read('docs/runbooks/PRODUCTION-GATE.md');
+  expect(gate).toContain('autorização dos ativos de marca');
+  expect(gate).toContain('documentação autorizada do SOUL MV');
+  expect(read('.env.example')).toContain('SOUL_MV_ADAPTER=demo');
 });
 ```
 
-- [ ] **Step 2: Confirmar falha E2E**
+- [ ] **Step 2: Run and observe failure**
 
-Run: `pnpm exec vitest run test/e2e`
-Expected: FAIL até o harness conectar Chatwoot, n8n, Core e MV Mock.
+Run: `pnpm exec vitest run test/operations.test.ts`
+Expected: FAIL because the operational artifacts do not exist.
 
-- [ ] **Step 3: Completar harness e runbooks**
+- [ ] **Step 3: Write runbooks and safe backup scripts**
 
-Documentar comandos exatos de instalação Windows/Linux, URLs, criação de credenciais, importação, atualização segura, diagnóstico, rotação, backup, restauração e rollback. O checklist de homologação exige Swagger/OpenAPI, módulos licenciados, limites, autenticação, dados autorizados, responsáveis da clínica e aprovação formal dos textos de preparo.
+Document exact Windows and Linux commands, environment ownership, migration and rollback rules, incident handling, retention decisions requiring approval, and the distinction between demo and real integration. Backup uses `pg_dump --format=custom`, SHA-256 checksum, and a caller-supplied output directory. Restore requires an explicit non-default target database and verifies the checksum before writing.
 
-- [ ] **Step 4: Executar gate final em ambiente limpo**
+- [ ] **Step 4: Exercise backup, restore, and secret scanning**
 
-Run: `docker compose -f infra/compose/dev.yml down; docker compose -f infra/compose/dev.yml up -d --build; pnpm lint; pnpm typecheck; pnpm test; pnpm exec vitest run test/e2e; node scripts/scan-secrets.mjs; node scripts/smoke-stack.mjs`
-Expected: todos os comandos passam; jornada normal tem zero handoff; cenários `timeout`, `rate-limit` e `unauthorized` terminam em retry seguro ou handoff auditado.
+Run: `pwsh scripts/backup.ps1 -OutputDirectory .artifacts/backups && pwsh scripts/restore.ps1 -BackupFile .artifacts/backups/latest.dump -TargetDatabase cmac_restore_test && node scripts/scan-secrets.mjs && pnpm exec vitest run test/operations.test.ts`
+Expected: checksum validates, restore targets only `cmac_restore_test`, no secrets are detected, and tests pass.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add README.md docs/runbooks test/e2e
-git commit -m "docs: complete clinic automation delivery"
+git add README.md docs scripts test/operations.test.ts
+git commit -m "docs: add CMAC portal operations and homologation"
+```
+
+### Task 12: Final Clean-Room Verification
+
+**Files:**
+- Modify: `README.md`
+- Create: `docs/runbooks/DELIVERY-REPORT.md`
+
+**Interfaces:**
+- Produces: current evidence for release status, demonstration-only behavior, real integrations, blockers, human exceptions, versions, and residual risks.
+
+- [ ] **Step 1: Reset the demo stack without deleting unrelated user data**
+
+Run: `docker compose -f infra/compose/dev.yml down --volumes`
+Expected: only volumes declared by the CMAC development compose project are removed.
+
+- [ ] **Step 2: Run the complete clean-room gate**
+
+Run: `docker compose -f infra/compose/dev.yml up -d --build && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm exec playwright test test/e2e && node scripts/scan-secrets.mjs`
+Expected: every command exits 0 with no test failures, type errors, lint errors, build errors, accessibility violations in covered pages, or detected secrets.
+
+- [ ] **Step 3: Verify requirements against evidence**
+
+Record test counts, service health, selected versions, local demo URLs, adapter mode, backup/restore evidence, known limitations, and every remaining production dependency in `docs/runbooks/DELIVERY-REPORT.md`. Explicitly list journeys that still require human intervention.
+
+- [ ] **Step 4: Confirm repository hygiene**
+
+Run: `git status --short && git ls-files | rg '(\.env$|\.dump$|\.bak$|secret|token)'`
+Expected: only the intended delivery report and README changes are uncommitted; no environment files, database dumps, tokens, or credentials are tracked.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add README.md docs/runbooks/DELIVERY-REPORT.md
+git commit -m "docs: record verified CMAC portal delivery"
 ```
 
 ## Completion Gate
 
-- [ ] Reexecutar `pnpm lint`, `pnpm typecheck`, `pnpm test` e E2E a partir de clone limpo.
-- [ ] Confirmar que `.env`, tokens, dados pessoais e dumps não estão rastreados.
-- [ ] Demonstrar orientação, agendamento, lembrete, reagendamento e cancelamento sem atendente.
-- [ ] Demonstrar conflito de vaga, limite de taxa, timeout e indisponibilidade com auditoria e fallback.
-- [ ] Restaurar um backup em banco isolado e comparar contagens críticas.
-- [ ] Registrar versões das imagens e checksums usados na demonstração.
+- [ ] Identity, recovery, catalog, booking, own appointments, cancellation, rescheduling, protocol, and support work through the conventional web interface.
+- [ ] Patient isolation, idempotency, slot concurrency, timeout behavior, and reconciliation are proven by automated tests.
+- [ ] Main journeys pass mobile viewport, keyboard, and automated accessibility checks.
+- [ ] Demo and real modes cannot be confused or switched from the browser.
+- [ ] The real SOUL MV adapter contains no guessed endpoint and remains disabled without authorized configuration.
+- [ ] Logs and metrics contain no tested sensitive values.
+- [ ] A clean Docker environment starts successfully and passes unit, integration, build, and E2E gates.
+- [ ] Backup and isolated restore are exercised.
+- [ ] The delivery report distinguishes demonstration behavior, real integrations, production blockers, and human exceptions.
