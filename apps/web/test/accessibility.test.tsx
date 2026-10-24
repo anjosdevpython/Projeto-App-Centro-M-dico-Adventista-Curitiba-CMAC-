@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { describe, expect, it } from 'vitest';
@@ -24,20 +24,9 @@ describe('Accessibility tests', () => {
 
     expect((await axe(container)).violations).toEqual([]);
 
-    await user.type(screenByLabel('E-mail'), 'paciente.teste@exemplo.com');
-    await user.type(screenByLabel('Senha de acesso'), 'senhaValida1234');
-    await user.click(container.querySelector('button[type="submit"]') as HTMLElement);
+    const quickBtn = screen.getByRole('button', { name: /gerar credencial de paciente/i });
+    await user.click(quickBtn);
 
     expect((await axe(container)).violations).toEqual([]);
   });
 });
-
-function screenByLabel(text: string): HTMLElement {
-  const labels = Array.from(document.querySelectorAll('label'));
-  const targetLabel = labels.find((l) => l.textContent?.includes(text));
-  if (!targetLabel) throw new Error(`Label ${text} not found`);
-  const inputId = targetLabel.getAttribute('for');
-  const input = document.getElementById(inputId || '');
-  if (!input) throw new Error(`Input for label ${text} not found`);
-  return input;
-}

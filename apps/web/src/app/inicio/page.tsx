@@ -2,29 +2,146 @@
 
 import { useEffect, useState } from 'react';
 
-import { clearDemoSession, getOrCreateDemoSession } from '../../lib/demo/demo-auth';
+import {
+  clearDemoSession,
+  generateDoctorCredentials,
+  getOrCreateDemoSession,
+  saveDemoSession,
+} from '../../lib/demo/demo-auth';
 import { listDemoAppointments } from '../../lib/demo/demo-service';
 import type { DemoAppointment, DemoCredentials } from '../../lib/demo/types';
 
 export default function InicioPage() {
   const [session, setSession] = useState<DemoCredentials | null>(null);
-  const [nextAppointment, setNextAppointment] = useState<DemoAppointment | null>(null);
+  const [appointments, setAppointments] = useState<DemoAppointment[]>([]);
+  const [attendanceMessage, setAttendanceMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const active = getOrCreateDemoSession();
     setSession(active);
-
-    const appointments = listDemoAppointments();
-    const upcoming = appointments.find((a) => a.status === 'agendado' || a.status === 'reagendado');
-    if (upcoming) {
-      setNextAppointment(upcoming);
-    }
+    setAppointments(listDemoAppointments());
   }, []);
 
   function handleReset() {
     clearDemoSession();
     window.location.href = '/cadastro';
   }
+
+  function handleSwitchToDoctor() {
+    const doc = generateDoctorCredentials();
+    saveDemoSession(doc);
+    setSession(doc);
+    setAppointments(listDemoAppointments());
+  }
+
+  function handleSimulateCall(patientName: string) {
+    setAttendanceMessage(`Chamada emitida para ${patientName} no painel da sala.`);
+    setTimeout(() => setAttendanceMessage(null), 4000);
+  }
+
+  const isDoctor = session?.role === 'medico';
+
+  // Visão da Equipe Médica
+  if (isDoctor) {
+    return (
+      <main className="page">
+        <p className="eyebrow">Painel da Equipe Médica • CMAC</p>
+        <h1>{session.patientName}</h1>
+        <p className="lead">
+          Ambiente simulado para acompanhamento da escala e fila de consultas do dia.
+        </p>
+
+        <section className="panel" style={{ borderLeft: '4px solid #00b5cc', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <span className="badge badge-info">Sessão Médica Ativa</span>
+            <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
+              Protocolo: <code>{session.protocol}</code>
+            </span>
+          </div>
+          <div style={{ marginTop: '12px', fontSize: '15px' }}>
+            <p style={{ margin: '4px 0' }}><strong>Especialidade:</strong> {session.specialty}</p>
+            <p style={{ margin: '4px 0' }}><strong>Registro Profissional:</strong> {session.crm}</p>
+            <p style={{ margin: '4px 0' }}><strong>E-mail institucional:</strong> {session.email}</p>
+          </div>
+        </section>
+
+        {attendanceMessage && (
+          <div className="panel" role="status" style={{ borderLeft: '4px solid #15803d', background: '#f0fdf4', marginBottom: '16px' }}>
+            🔔 {attendanceMessage}
+          </div>
+        )}
+
+        <section className="panel" style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '20px', margin: 0 }}>Agenda do Dia — Consultas Marcadas</h2>
+            <span className="badge badge-success">{appointments.length} Pacientes</span>
+          </div>
+
+          {appointments.length === 0 ? (
+            <p style={{ color: 'var(--muted)' }}>Nenhuma consulta agendada para hoje.</p>
+          ) : (
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {appointments.map((apt) => (
+                <div
+                  key={apt.id}
+                  style={{
+                    border: '1px solid var(--border)',
+                    borderRadius: '10px',
+                    padding: '14px',
+                    display: 'grid',
+                    gap: '8px',
+                    background: apt.status === 'cancelado' ? '#f8fafc' : 'white',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <strong>{apt.specialtyName}</strong>
+                    <span className={`badge ${apt.status === 'cancelado' ? 'badge-muted' : 'badge-success'}`}>
+                      {apt.status.toUpperCase()}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '14px' }}>
+                    <strong>Paciente:</strong> {apt.patientEmail} • Protocolo: <code>{apt.protocol}</code>
+                  </p>
+                  <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>
+                    Horário: {new Date(apt.startsAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} • Local: {apt.location}
+                  </p>
+                  {apt.status !== 'cancelado' && (
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        style={{ minHeight: '36px', fontSize: '13px', padding: '0 12px', width: 'auto' }}
+                        onClick={() => handleSimulateCall(apt.patientEmail)}
+                      >
+                        Chamar Paciente
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="panel">
+          <h2>Gerenciar Sessão</h2>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '12px' }}>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="primary-button"
+              style={{ maxWidth: '260px', minHeight: '44px', fontSize: '14px' }}
+            >
+              Trocar Perfil / Voltar ao Cadastro
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  // Visão do Paciente (Cliente)
+  const nextAppointment = appointments.find((a) => a.status === 'agendado' || a.status === 'reagendado');
 
   return (
     <main className="page">
@@ -37,7 +154,7 @@ export default function InicioPage() {
       {session && (
         <section className="panel" style={{ borderLeft: '4px solid var(--brand-cyan)', marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-            <span className="badge badge-success">Credencial Demonstrativa Ativa</span>
+            <span className="badge badge-success">Credencial de Paciente Ativa</span>
             <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Protocolo: <code>{session.protocol}</code></span>
           </div>
           <div style={{ marginTop: '12px', fontSize: '15px' }}>
@@ -103,19 +220,29 @@ export default function InicioPage() {
         </a>
       </div>
 
-      <section className="panel" style={{ marginTop: '24px' }}>
-        <h2>Gerenciamento do Acesso</h2>
-        <p style={{ fontSize: '14px', color: 'var(--muted)' }}>
-          Para testar com outro e-mail ou redefinir todos os dados sintéticos salvos neste navegador:
+      <section className="panel" style={{ marginTop: '24px', display: 'grid', gap: '16px' }}>
+        <h2>Alternar Perfil Demonstrativo</h2>
+        <p style={{ fontSize: '14px', color: 'var(--muted)', margin: 0 }}>
+          Deseja visualizar a perspectiva da clínica e dos médicos?
         </p>
-        <button
-          type="button"
-          onClick={handleReset}
-          className="secondary-button"
-          style={{ maxWidth: '300px', minHeight: '44px', fontSize: '14px' }}
-        >
-          Trocar credencial / Criar outro acesso
-        </button>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={handleSwitchToDoctor}
+            className="secondary-button"
+            style={{ maxWidth: '280px', minHeight: '44px', fontSize: '14px' }}
+          >
+            🩺 Ver como Equipe Médica
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="secondary-button"
+            style={{ maxWidth: '260px', minHeight: '44px', fontSize: '14px' }}
+          >
+            Trocar credenciais / Sair
+          </button>
+        </div>
       </section>
     </main>
   );

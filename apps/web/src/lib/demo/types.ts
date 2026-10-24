@@ -1,9 +1,13 @@
+export type DemoUserRole = 'paciente' | 'medico';
+
 export interface DemoCredentials {
   id: string;
   email: string;
   patientName: string;
   protocol: string;
-  role: string;
+  role: DemoUserRole;
+  crm?: string;
+  specialty?: string;
   createdAt: string;
   isSynthetic: true;
 }
@@ -33,7 +37,7 @@ export interface DemoSlot {
   isSynthetic: true;
 }
 
-export type DemoAppointmentStatus = 'agendado' | 'reagendado' | 'cancelado';
+export type DemoAppointmentStatus = 'agendado' | 'reagendado' | 'cancelado' | 'atendido';
 
 export interface DemoAppointment {
   id: string;
@@ -48,5 +52,6 @@ export interface DemoAppointment {
   status: DemoAppointmentStatus;
   createdAt: string;
   patientEmail: string;
+  patientName?: string;
   isSynthetic: true;
 }
