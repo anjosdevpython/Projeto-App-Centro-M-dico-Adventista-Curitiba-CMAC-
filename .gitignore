@@ -1,0 +1,12 @@
+node_modules/
+.pnpm-store/
+.env
+.env.*
+!.env.example
+coverage/
+.next/
+dist/
+.artifacts/
+playwright-report/
+test-results/
+
