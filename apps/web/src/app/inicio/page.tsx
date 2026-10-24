@@ -434,6 +434,30 @@ export default function InicioPage() {
                   Liberado
                 </span>
               </div>
+
+              {/* Card de Acesso Rápido à Atualização Cadastral e Documentos do Stitch */}
+              <a
+                href="/perfil"
+                className="card-interactive w-full p-4 rounded-2xl bg-surface-container-low hover:bg-surface-container border border-surface-container flex items-center justify-between gap-3 text-xs transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[20px]">folder_shared</span>
+                  </div>
+                  <div className="min-w-0">
+                    <strong className="text-sm font-bold text-primary block truncate">
+                      Documentos &amp; Atualização Cadastral
+                    </strong>
+                    <span className="text-outline text-[11px] block truncate">
+                      Atualize telefone, endereço ou envie RG/pedidos médicos
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-secondary font-bold shrink-0">
+                  <span className="hidden sm:inline">Gerenciar</span>
+                  <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                </div>
+              </a>
             </section>
           </div>
         </div>
