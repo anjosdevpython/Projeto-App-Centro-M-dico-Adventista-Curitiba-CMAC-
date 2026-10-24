@@ -71,21 +71,21 @@ export function PortalShell({ children }: { children: ReactNode }) {
               isCollapsed ? 'w-20' : 'w-64 lg:w-72'
             }`}
           >
-            {/* Desktop Brand Header & Collapse Toggle */}
+            {/* Desktop Brand Header & Collapse Toggle - Adventist Health Brand Guidelines */}
             <div className={`p-4 border-b border-slate-100 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
               <div className="flex items-center gap-3 min-w-0">
                 <img
-                  alt="Clínica Adventista"
-                  className="w-10 h-10 rounded-xl object-contain shadow-sm bg-primary p-1 shrink-0"
+                  alt="Adventist Health - Centro Médico Adventista Curitiba"
+                  className="w-10 h-10 rounded-xl object-contain shadow-sm bg-primary p-1.5 shrink-0"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrk3vT9w5PgltHzhH3M6CDRfoi4uKJJeeX4UiFhgKiEkObRjBYPJ4qSt6HxxPdEa2zxCEG8-_AhLPoWEm0A8OkaU7BNU2zKTx6R_1hoeCJtggc67-PlNJ37bK1fQ5F3_1juA2_C-WxnMGHzQ_Ga1nkWlz6WhWcLC3rz2HUEghccWwhaHGoC3WadFBUCR0JH1da8X4N51WAm8bTthLprdHNpKLCkq2RieoYLMl93gjPR4nR9Jq48PTx_To2hquGOnRKpw"
                 />
                 {!isCollapsed && (
                   <div className="flex flex-col min-w-0">
                     <span className="font-bold text-sm tracking-tight text-primary leading-tight truncate">
-                      Clínica Adventista
+                      Adventist Health
                     </span>
-                    <span className="text-xs text-on-surface-variant font-medium truncate">
-                      {isDoctorRoute ? 'Corpo Clínico • Curitiba' : 'Portal do Paciente • Curitiba'}
+                    <span className="text-[11px] text-secondary font-semibold truncate">
+                      Centro Médico Curitiba • CMAC
                     </span>
                   </div>
                 )}
@@ -94,9 +94,9 @@ export function PortalShell({ children }: { children: ReactNode }) {
                 onClick={toggleSidebar}
                 aria-label={isCollapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
                 title={isCollapsed ? 'Expandir menu' : 'Recolher menu'}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-primary hover:bg-surface-container transition-colors shrink-0"
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-100 transition-colors shrink-0"
               >
-                <span className="material-symbols-outlined text-[20px]">
+                <span className="material-symbols-outlined text-[18px]">
                   {isCollapsed ? 'menu_open' : 'keyboard_double_arrow_left'}
                 </span>
               </button>

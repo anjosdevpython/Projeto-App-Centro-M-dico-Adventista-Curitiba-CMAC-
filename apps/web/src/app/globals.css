@@ -181,6 +181,55 @@ body {
   transform: translateY(-1.5px);
 }
 
-.btn-glow:active {
-  transform: scale(0.98);
+/* macOS Glassmorphism & Window Chrome Tokens */
+.macos-window-header {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
 }
+
+.macos-traffic-light {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  display: inline-block;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.macos-traffic-light:hover {
+  opacity: 0.85;
+  transform: scale(1.1);
+}
+
+.macos-traffic-close {
+  background-color: #ff5f56;
+  border: 1px solid #e0443e;
+}
+
+.macos-traffic-minimize {
+  background-color: #ffbd2e;
+  border: 1px solid #dea123;
+}
+
+.macos-traffic-maximize {
+  background-color: #27c93f;
+  border: 1px solid #1aab29;
+}
+
+.macos-glass-card {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px) saturate(190%);
+  -webkit-backdrop-filter: blur(16px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 24px -1px rgba(0, 36, 74, 0.06), 0 2px 8px -1px rgba(0, 0, 0, 0.04);
+}
+
+.macos-dock {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 30px -5px rgba(0, 36, 74, 0.12), 0 0 1px 1px rgba(255, 255, 255, 0.9);
+}
+
